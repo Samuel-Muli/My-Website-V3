@@ -327,5 +327,60 @@ section{
 }
 .services-box p{
     font-size: 1.6rem;
-    margin: 1rem 0 3rem:
+    margin: 1rem 0 3rem;
+}
+/* portofolio section */
+
+.portfolio{
+    background: var(--snd-bg-color);
+}
+.portfolio-box{
+    background-size: cover;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex-direction: column;
+}
+.portfolio .heading{
+    margin-bottom: 5rem;
+}
+.portfolio-box img{
+    width: 15rem;
+    border-radius: 50%;
+    border: 3px solid var(--main-color);
+    box-shadow: 0 0 25px var(--main-color);
+}
+.wrapper{
+    display: grid;
+    grid-template-columns: repeat(3,1fr);
+    gap: 3rem;
+}
+.portfolio-item {
+    min-height: 450px;
+    max-width: 450px;
+    background: var(--bg-color);
+    border: 0.3rem solid var(--bg-color);
+    border-radius: 2rem;
+    margin: o 2rem;
+    padding: 20px 20px;
+    cursor: pointer;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    gap: 1.5rem;
+    color: var(--text-color);
+    transition: 0.3s ease;
+}
+.portfolio-item:hover{
+    border-color: var(--main-color);
+    transform: scale(1.05);
+}
+.portfolio-item h2{
+    font-size: 3rem;
+}
+.portfolio-item p{
+    font-size: 1.8rem;
+    line-height: 1.8;
+    text-align: center;
 }
