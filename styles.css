@@ -473,10 +473,24 @@ section{
     html {
         font-size: 55%;
     }
+    .home {
+        gap: 5rem;
+        padding-left: 5%;
+    }
+    .home-img img {
+        width: 35vw;
+        height: 300px;
+    }
+    .about-content .heading{
+        text-align: center;
+    }
 }
 @media (max-width:991px){
     .header{
         padding: 2rem 3%;
+    }
+    .about-content .heading{
+        text-align: center;
     }
     section {
         padding: 10rem 3%;
@@ -502,21 +516,22 @@ section{
         position: absolute;
         top: 100%;
         right: 100%;
-        width: 255px;
-        min-height: 100vh;
+        width: 150px;
+        /* min-height: 100vh; */
         display: flex;
         flex-direction: column;
         background: var(--main-color);
         transition: all 0.5s ease;
         backdrop-filter: blur(10px);
+        border-radius:0 0 0 30px;
     }
-    .nav a{
+    .navbar a{
         display: block;
         padding: 17px;
         font-size: 22px;
 
     }
-    .nav.active{
+    .navbar.active{
         right: 0;
     }
     .home{
@@ -537,16 +552,56 @@ section{
         margin-top: 4rem;
     }
     .about {
+
         flex-direction: column-reverse;
     }
     .about-img img{
         width: 70vw;
         margin-top: 4rem;
     }
+    .about-content .heading{
+        text-align: center;
+    }
     .services h2{
         margin-bottom: 3rem;
     }
 }
+
+@media (max-width: 850px) {
+    .home {
+        flex-direction: column;
+        padding-top: 12rem;
+        gap: 3rem;
+    }
+    .home-img img {
+        width: 60vw;
+    }
+    .home-content {
+        text-align: center;
+    }
+    .about-content .heading{
+        text-align: center;
+    }
+}
+
+
+/* Fix about section overlap */
+@media (max-width: 768px) {
+    .about {
+        flex-direction: column-reverse;
+        text-align: center;
+    }
+    .about-img img {
+        width: 60vw;
+    }
+    .heading {
+        text-align: center;
+    }
+    .about-content .heading{
+        text-align: center;
+    }
+}
+
 @media (max-width: 617px){
     .home-img img {
         width: 70vw;
@@ -556,6 +611,9 @@ section{
     .about-img img{
         width: 70vw;
         margin-top: 4rem;
+    }
+    .about-content .heading{
+        text-align: center;
     }
 }
 @media (max-width: 617px){
