@@ -1,4 +1,4 @@
-document.addEventListener('DOMContentLoaded', function() {
+document.addEventListener('DOMContentLoaded', function () {
     // Menu Toggle Fix
     let menu = document.querySelector('#menu-icon');
     let navbar = document.querySelector('.navbar');
@@ -15,7 +15,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Typed.js Initialization Fix
     const typed = new Typed('.typed-text', {
-        strings: ['Mechanical Engineer.', 'Website Developer.'],
+        strings: ['Mechanical Engineer.', 'Website Developer.', 'Designer.', 'Freelancer.', 'Coder.'],
         typeSpeed: 80,
         backSpeed: 70,
         backDelay: 1200,
