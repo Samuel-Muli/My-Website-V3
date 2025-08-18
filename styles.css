@@ -176,16 +176,35 @@ section {
     opacity: 0;
     animation: slideRight 1s ease forwards;
     animation-delay: 1s;
-    background-image: linear-gradient(#0ef, #0ef);
-    background-repeat: no-repeat;
-    background-size: 0% 100%;
-    background-position-x: right;
-    transition: backgroud-size 500ms;
+    position: relative;
+    /* Required for absolute positioning of pseudo-element */
+    color: var(--text-color);
+    /* Ensures base color is visible */
+    overflow: hidden;
+    /* Prevents any overflow issues during animation */
 }
 
-.home-content h1:hover {
-    background-size: 100% 100%;
-    background-position-x: left;
+.home-content h1::before {
+    content: attr(data-text);
+    /* Uses the data-text attribute for the content */
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 0;
+    /* Starts hidden (no width) */
+    height: 100%;
+    color: var(--main-color);
+    /* The fill color (#0ef) */
+    overflow: hidden;
+    white-space: nowrap;
+    /* Keeps text on one line for the reveal effect */
+    transition: width 500ms ease;
+    /* Animates the width for smooth fill */
+}
+
+.home-content h1:hover::before {
+    width: 100%;
+    /* Expands to full width on hover */
 }
 
 .home-content p {
