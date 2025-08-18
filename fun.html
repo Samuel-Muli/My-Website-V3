@@ -1,0 +1,128 @@
+<!--        Created by Samuel Muli    -->
+
+<!DOCTYPE html>
+<html lang="en">
+
+
+
+
+<html>
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Fun Page</title>
+</head>
+
+<body>
+
+</body>
+
+</html>
+
+<link rel="stylesheet" href="styless.css">
+</head>
+
+<body>
+    <div class="container">
+        <header>
+            <h1><i class="fas fa-calculator"></i> Advanced Age Calculator</h1>
+            <p class="subtitle">Calculate your age in years, months, days, hours, minutes, seconds, and milliseconds</p>
+        </header>
+        
+        <div class="content">
+            <div class="input-group">
+                <label for="dob">Enter Your Date of Birth</label>
+                <input type="datetime-local" id="dob">
+                <button class="btn" onclick="calculateAge()">
+                    <i class="fas fa-calculator"></i> Calculate Age
+                </button>
+                <p class="info">For best results, include your exact time of birth</p>
+            </div>
+            
+            <div class="results">
+                <div class="card">
+                    <div class="card-header">
+                        <h3><div class="icon"><i class="fas fa-user-clock"></i></div> Your Current Age</h3>
+                    </div>
+                    <div class="card-body" id="current-age">
+                        <div class="time-unit">
+                            <div class="unit-label"><i class="fas fa-calendar-alt"></i> Years</div>
+                            <div class="unit-value">--</div>
+                        </div>
+                        <div class="time-unit">
+                            <div class="unit-label"><i class="fas fa-calendar"></i> Months</div>
+                            <div class="unit-value">--</div>
+                        </div>
+                        <div class="time-unit">
+                            <div class="unit-label"><i class="fas fa-calendar-day"></i> Days</div>
+                            <div class="unit-value">--</div>
+                        </div>
+                        <div class="time-unit">
+                            <div class="unit-label"><i class="fas fa-clock"></i> Hours</div>
+                            <div class="unit-value">--</div>
+                        </div>
+                        <div class="time-unit">
+                            <div class="unit-label"><i class="fas fa-hourglass-half"></i> Minutes</div>
+                            <div class="unit-value">--</div>
+                        </div>
+                        <div class="time-unit">
+                            <div class="unit-label"><i class="fas fa-stopwatch"></i> Seconds</div>
+                            <div class="unit-value">--</div>
+                        </div>
+                        <div class="time-unit">
+                            <div class="unit-label"><i class="fas fa-microchip"></i> Milliseconds</div>
+                            <div class="unit-value">--</div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="card next-birthday">
+                    <div class="card-header">
+                        <h3><div class="icon next"><i class="fas fa-birthday-cake"></i></div> Until Next Birthday</h3>
+                    </div>
+                    <div class="card-body" id="next-birthday">
+                        <div class="time-unit">
+                            <div class="unit-label"><i class="fas fa-calendar-alt"></i> Years</div>
+                            <div class="unit-value">--</div>
+                        </div>
+                        <div class="time-unit">
+                            <div class="unit-label"><i class="fas fa-calendar"></i> Months</div>
+                            <div class="unit-value">--</div>
+                        </div>
+                        <div class="time-unit">
+                            <div class="unit-label"><i class="fas fa-calendar-day"></i> Days</div>
+                            <div class="unit-value">--</div>
+                        </div>
+                        <div class="time-unit">
+                            <div class="unit-label"><i class="fas fa-clock"></i> Hours</div>
+                            <div class="unit-value">--</div>
+                        </div>
+                        <div class="time-unit">
+                            <div class="unit-label"><i class="fas fa-hourglass-half"></i> Minutes</div>
+                            <div class="unit-value">--</div>
+                        </div>
+                        <div class="time-unit">
+                            <div class="unit-label"><i class="fas fa-stopwatch"></i> Seconds</div>
+                            <div class="unit-value">--</div>
+                        </div>
+                        <div class="time-unit">
+                            <div class="unit-label"><i class="fas fa-microchip"></i> Milliseconds</div>
+                            <div class="unit-value">--</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="footer">
+            <p>© 2023 Advanced Age Calculator | Calculates your age down to the millisecond!</p>
+        </div>
+    </div>
+    </section>
+    <script src="script.js"></script>
+    <script src="https://kit.fontawesome.com/47e2788074.js" crossorigin="anonymous"></script>
+    <script src="https://unpkg.com/typed.js@2.1.0/dist/typed.umd.js"></script>
+</body>
+
+</html>
