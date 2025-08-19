@@ -1,0 +1,70 @@
+<html>
+<!--        Created by Samuel Muli    -->
+
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#0ef">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <meta name="description"
+        content="Samuel Muli is a Mechanical Engineer, Coder and Designer. He is passionate about creating and designing things that are both functional and aesthetically pleasing.">
+    <meta name="keywords"
+        content="Samuel Muli, Muli Samuel, Mechanical Engineer, Coder, Designer, Web Developer, Programmer, Portfolio, Contact">
+    <meta name="author" content="Samuel Muli">
+    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href='https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css' rel='stylesheet'>
+    <link rel="icon" href="img/image.png" type="image/png">
+    <title>Unit Converter</title>
+</head>
+
+  <body>
+    <h1>Unit Converter</h1>
+    <form>
+      <label for="value">Value:</label>
+      <input type="number" id="value" required>
+      <select id="unit-from" required>
+        <option value="meters">Meters</option>
+        <option value="kilometers">Kilometers</option>
+        <option value="miles">Miles</option>
+      </select>
+      <span>to</span>
+      <select id="unit-to" required>
+        <option value="meters">Meters</option>
+        <option value="kilometers">Kilometers</option>
+        <option value="miles">Miles</option>
+      </select>
+      <button type="submit">Convert</button>
+    </form>
+    <div id="result"></div>
+    <script>
+      const form = document.querySelector('form');
+      form.addEventListener('submit', (event) => {
+        event.preventDefault();
+        const value = parseFloat(document.getElementById('value').value);
+        const unitFrom = document.getElementById('unit-from').value;
+        const unitTo = document.getElementById('unit-to').value;
+        let result;
+        if (unitFrom === 'meters' && unitTo === 'kilometers') {
+          result = value / 1000;
+        } else if (unitFrom === 'meters' && unitTo === 'miles') {
+          result = value / 1609.34;
+        } else if (unitFrom === 'kilometers' && unitTo === 'meters') {
+          result = value * 1000;
+        } else if (unitFrom === 'kilometers' && unitTo === 'miles') {
+          result = value / 1.60934;
+        } else if (unitFrom === 'miles' && unitTo === 'meters') {
+          result = value * 1609.34;
+        } else if (unitFrom === 'miles' && unitTo === 'kilometers') {
+          result = value * 1.60934;
+        } else {
+          result = value;
+        }
+        document.getElementById('result').innerText = `Result: ${result} ${unitTo}`;
+      });
+    </script>
+  </body>
+</html>

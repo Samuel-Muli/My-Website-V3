@@ -17,30 +17,61 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link href='https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css' rel='stylesheet'>
     <link rel="icon" href="img/image.png" type="image/png">
-    <title>Samuel Muli</title>
+    <title>Age Calculator</title>
 </head>
 
 <body>
+    <!-- Birthday Popup -->
+    <div class="birthday-popup" id="birthdayPopup">
+        <div class="birthday-content">
+            <div class="birthday-icon">
+                <i class="fas fa-birthday-cake"></i>
+            </div>
+            <h2 class="birthday-title">Happy Birthday!</h2>
+            <div class="birthday-message">
+                Wishing you a day filled with happiness and a year filled with joy! 🎉
+            </div>
+            <div class="birthday-fact" id="birthdayFact">
+                Did you know? Your birthday is one of the luckiest days of the year!
+            </div>
+            <button class="close-popup" onclick="closePopup()">Celebrate!</button>
+        </div>
+    </div>
+
     <div class="container">
+        <div class="real-time-indicator">
+            <i class="fas fa-sync-alt fa-spin"></i> Real-time
+        </div>
+
         <header>
             <h1><i class="fas fa-calculator"></i> Advanced Age Calculator</h1>
-            <p class="subtitle">Calculate your age in years, months, days, hours, minutes, seconds, and milliseconds</p>
+            <p class="subtitle">Calculate your exact age and see days until next birthday with zodiac sign and fun facts
+            </p>
         </header>
-        
+
         <div class="content">
             <div class="input-group">
                 <label for="dob">Enter Your Date of Birth</label>
-                <input type="datetime-local" id="dob">
+                <div class="input-container">
+                    <input type="datetime-local" id="dob">
+                    <div class="scroll-buttons">
+                        <button class="scroll-btn" id="scrollUp"><i class="fas fa-chevron-up"></i></button>
+                        <button class="scroll-btn" id="scrollDown"><i class="fas fa-chevron-down"></i></button>
+                    </div>
+                </div>
+                <p class="scroll-info">Use buttons or mouse wheel to adjust date/time</p>
                 <button class="btn" onclick="calculateAge()">
                     <i class="fas fa-calculator"></i> Calculate Age
                 </button>
                 <p class="info">For best results, include your exact time of birth</p>
             </div>
-            
+
             <div class="results">
                 <div class="card">
                     <div class="card-header">
-                        <h3><div class="icon"><i class="fas fa-user-clock"></i></div> Your Current Age</h3>
+                        <h3>
+                            <div class="icon"><i class="fas fa-user-clock"></i></div> Your Current Age
+                        </h3>
                     </div>
                     <div class="card-body" id="current-age">
                         <div class="time-unit">
@@ -73,10 +104,12 @@
                         </div>
                     </div>
                 </div>
-                
+
                 <div class="card next-birthday">
                     <div class="card-header">
-                        <h3><div class="icon next"><i class="fas fa-birthday-cake"></i></div> Until Next Birthday</h3>
+                        <h3>
+                            <div class="icon next"><i class="fas fa-birthday-cake"></i></div> Until Next Birthday
+                        </h3>
                     </div>
                     <div class="card-body" id="next-birthday">
                         <div class="time-unit">
@@ -109,14 +142,44 @@
                         </div>
                     </div>
                 </div>
+
+                <div class="card zodiac">
+                    <div class="card-header">
+                        <h3>
+                            <div class="icon zodiac"><i class="fas fa-star"></i></div> Your Zodiac Sign
+                        </h3>
+                    </div>
+                    <div class="card-body">
+                        <div class="zodiac-display" id="zodiac-sign">
+                            <div class="zodiac-icon">
+                                <i class="fas fa-question"></i>
+                            </div>
+                            <div class="zodiac-name">--</div>
+                            <div class="zodiac-dates">--</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card fun-facts">
+                    <div class="card-header">
+                        <h3>
+                            <div class="icon fun"><i class="fas fa-lightbulb"></i></div> Fun Birthday Fact
+                        </h3>
+                    </div>
+                    <div class="card-body">
+                        <div class="fun-fact-content" id="fun-fact">
+                            Enter your birth date to see an interesting fact about your birthday!
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
-        
+
         <div class="footer">
             <p>© 2025 Advanced Age Calculator | Calculates your age down to the millisecond!</p>
         </div>
     </div>
-    </section>
+
     <script src="script.js"></script>
     <script src="https://kit.fontawesome.com/47e2788074.js" crossorigin="anonymous"></script>
     <script src="https://unpkg.com/typed.js@2.1.0/dist/typed.umd.js"></script>
