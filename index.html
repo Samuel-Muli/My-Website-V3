@@ -21,6 +21,91 @@
 </head>
 
 <body>
+    <!-- Visitor Notification Popup -->
+    <div class="visitor-popup" id="visitorPopup">
+        <div class="popup-content">
+            <h3><i class="fas fa-bell"></i> Visitor Notification</h3>
+            <p>Notify Samuel about your visit? (Optional)</p>
+            
+            <form id="visitorForm">
+                <div class="form-group">
+                    <input type="text" name="visitor_name" placeholder="Your Name (Optional)">
+                </div>
+                <div class="form-group">
+                    <input type="email" name="visitor_email" placeholder="Your Email (Optional)">
+                </div>
+                <div class="form-group">
+                    <input type="text" name="visitor_purpose" placeholder="Purpose of Visit (Optional)">
+                </div>
+                <div class="form-group">
+                    <label>
+                        <input type="checkbox" name="notify_me" checked>
+                        Notify Samuel about my visit
+                    </label>
+                </div>
+                <div class="popup-buttons">
+                    <button type="submit" class="submit-btn">Notify Visit</button>
+                    <button type="button" class="skip-btn">Skip</button>
+                </div>
+            </form>
+            
+            <div class="visitor-count">
+                <i class="fas fa-users"></i>
+                <span id="totalVisits">0</span> visits today
+            </div>
+        </div>
+    </div>
+
+    <!-- Visitor Dashboard (Hidden by default, accessible from admin) -->
+    <div class="visitor-dashboard" id="visitorDashboard">
+        <div class="dashboard-header">
+            <h3><i class="fas fa-chart-line"></i> Visitor Analytics</h3>
+            <button class="close-dashboard" onclick="toggleDashboard()">×</button>
+        </div>
+        <div class="dashboard-content">
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <h4>Total Visits</h4>
+                    <div class="stat-number" id="totalVisitsCount">0</div>
+                </div>
+                <div class="stat-card">
+                    <h4>Today's Visits</h4>
+                    <div class="stat-number" id="todayVisitsCount">0</div>
+                </div>
+                <div class="stat-card">
+                    <h4>Unique Visitors</h4>
+                    <div class="stat-number" id="uniqueVisitors">0</div>
+                </div>
+                <div class="stat-card">
+                    <h4>With Details</h4>
+                    <div class="stat-number" id="detailedVisits">0</div>
+                </div>
+            </div>
+            
+            <div class="visitor-list">
+                <h4>Recent Visitors</h4>
+                <div class="list-header">
+                    <span>Time</span>
+                    <span>Name</span>
+                    <span>Location</span>
+                    <span>Device</span>
+                </div>
+                <div class="list-content" id="visitorList">
+                    <div class="empty-state">No visitor data yet</div>
+                </div>
+            </div>
+            
+            <button class="export-btn" onclick="exportVisitorData()">
+                <i class="fas fa-download"></i> Export Data
+            </button>
+        </div>
+    </div>
+
+    <!-- Admin Access Button (Hidden by default) -->
+    <button class="admin-access-btn" id="adminAccessBtn" onclick="showAdminAccess()">
+        <i class="fas fa-shield-alt"></i>
+    </button>
+
     <header class=header>
         <a href="#home" class="logo">Samuel Muli</a>
 
@@ -32,9 +117,13 @@
             <a href="#services">Services</a>
             <a href="#portfolio">Portfolio</a>
             <a href="#contact">Contact</a>
+            <a href="#" onclick="toggleDashboard()" class="visitor-stats-btn">
+                <i class="fas fa-chart-bar"></i> Stats
+            </a>
         </nav>
-
     </header>
+    
+    <!-- Rest of your existing content remains the same -->
     <section class="home" id="home">
         <div class="home-img">
             <img src="/img/image.png" alt="">
@@ -43,7 +132,6 @@
             <h3>Hi, It's Me</h3>
             <h1 data-text="Samuel Muli">Samuel Muli</h1>
             <h3>And I am <span class="typed-text"></span></h3>
-            <!-- <p>Mechanical Engineer, Coder and Designer</p> -->
             <div class="home-sci">
                 <a href="https://wa.me/254705244235" style="--i:6"><i class="fa-brands fa-whatsapp"></i></a>
                 <a href="https://web.facebook.com/samu.muli.92" style="--i:7"><i class="fa-brands fa-facebook"></i></a>
@@ -53,7 +141,6 @@
                 <a href="https://www.linkedin.com/in/muli-samuel-442259344" style="--i:10"><i
                         class="fa-brands fa-linkedin"></i></a>
                 <a href="https://github.com/Samuel-Muli" style="--i:11"><i class="fa-brands fa-github"></i></a>
-
             </div>
             <a href="contact" class="btn-box">Contact Me</a>
             <div class="btn-box">
@@ -67,16 +154,15 @@
                     <p>C++</p>
                     <p>SolidWorks</p>
                     <p>AutoCAD</p>
-                    <!--                     <p>Fusion 360</p> -->
                     <p>Adobe Photoshop</p>
-                    <!--                     <p>Adobe Illustrator</p> -->
-                    <!--                     <p>Adobe XD</p> -->
                     <button popovertarget="modal">Close</button>
                 </div>
             </div>
         </div>
         <div class="home-imgHover"></div>
     </section>
+    
+    <!-- About, Services, Portfolio, Contact sections remain the same -->
     <!-- About Section -->
     <section class="about" id="about">
         <div class="about-content">
@@ -176,6 +262,28 @@
                         measurement.</p>
                     <p><a href="unit%20converter.html" class="btn-box" target="_blank">View Project</a></p>
                 </div>
+                <div class="portfolio-item">
+                    <img src="/img/img2.png" alt="">
+
+                    <h2>Music duplicate finder</h2>
+                    <p>A Python script that scans your music library for duplicate files based on metadata and file
+                        size, helping you free up storage space and organize your collection.</p>
+                </div>
+                <div class="portfolio-item">
+                    <img src="/img/img3.png" alt="">
+
+                    <h2>Birthday App</h2>
+                    <p>A desktop and android application that allows users to calculate their age, view their zodiac sign, and see fun birthday facts based on their date of birth.</p>
+                </div>
+                <div class="portfolio-item">
+                    <img src="/img/img2.png" alt="">
+
+                    <h2>Git Hub</h2>
+                    <p>I have different projects on GitHub that you can explore.</p>
+                    <p><a href="https://github.com/Samuel-Muli" class="btn-box" target="_blank">Check Out My Projects</a></p>
+                </div>
+            </div>
+
     </section>
     <!-- contact section -->
     <section class="contact" id="contact">
@@ -208,7 +316,7 @@
     </section>
 
 
-    <!-- footer -->
+
     <footer class="footer">
         <div class="home-sci">
             <a href="https://wa.me/254705244235" style="--i:6"><i class="fa-brands fa-whatsapp"></i></a>
@@ -221,11 +329,10 @@
             <a href="https://github.com/Samuel-Muli" style="--i:11"><i class="fa-brands fa-github"></i></a>
         </div>
         <p class="copyright">
-            &copy; 2025 Samuel Muli. All Rights Reserved.
+            &copy; 2026 Samuel Muli. All Rights Reserved.
+            <span class="visit-counter">Visits: <span id="siteVisits">0</span></span>
         </p>
     </footer>
-
-
 
     <script src="script.js"></script>
     <script src="https://kit.fontawesome.com/47e2788074.js" crossorigin="anonymous"></script>
