@@ -126,7 +126,7 @@
     <!-- Rest of your existing content remains the same -->
     <section class="home" id="home">
         <div class="home-img">
-            <img src="/img/image.png" alt="">
+            <img src="/img/image.png" alt="Samuel Muli" loading="lazy">
         </div>
         <div class="home-content">
             <h3>Hi, It's Me</h3>
@@ -159,7 +159,6 @@
                 </div>
             </div>
         </div>
-        <div class="home-imgHover"></div>
     </section>
     
     <!-- About, Services, Portfolio, Contact sections remain the same -->
@@ -176,7 +175,7 @@
             <a href="#services" class="btn-box">My Services</a>
         </div>
         <div class="about-img">
-            <img src="/img/image.png" alt="">
+            <img src="/img/image.png" alt="Samuel Muli" loading="lazy">
         </div>
     </section>
     <!-- Services Section -->
@@ -218,28 +217,31 @@
 
             <div class="wrapper">
                 <div class="portfolio-item">
-                    <img src="/img/img2.png" alt="">
+                    <img src="/img/img2.png" alt="WhatsApp Bot" loading="lazy">
 
                     <h2>What'sApp Bot</h2>
                     <p>A sleek JavaScript bot built using the Baileys library, designed for seamless WhatsApp
                         automation.</p>
+                    <p><a href="https://github.com/Samuel-Muli" class="btn-box" target="_blank">View on GitHub</a></p>
                 </div>
                 <div class="portfolio-item">
-                    <img src="/img/img3.png" alt="">
+                    <img src="/img/img3.png" alt="Portfolio Website" loading="lazy">
 
                     <h2>Portfolio Website</h2>
                     <p>A responsive portfolio website built using HTML, CSS, and JavaScript, designed to showcase my
                         skills and projects.</p>
+                    <p><a href="https://github.com/Samuel-Muli" class="btn-box" target="_blank">View on GitHub</a></p>
                 </div>
                 <div class="portfolio-item">
-                    <img src="/img/img4.png" alt="">
+                    <img src="/img/img4.png" alt="Python Script" loading="lazy">
 
                     <h2>Python Script</h2>
                     <p>A Python script that automates the process of downloading and organizing files from the internet.
                     </p>
+                    <p><a href="https://github.com/Samuel-Muli" class="btn-box" target="_blank">View on GitHub</a></p>
                 </div>
                 <div class="portfolio-item">
-                    <img src="/img/img2.png" alt="">
+                    <img src="/img/img2.png" alt="Company Website" loading="lazy">
 
                     <h2>Company Website</h2>
                     <p>Created Lekisa Trading Company website. The site can be accessed by clicking the following link
@@ -247,7 +249,7 @@
                     <p><a href="https://lekisatrading.co.ke/" class="btn-box" target="_blank">Lekisa</a></p>
                 </div>
                 <div class="portfolio-item">
-                    <img src="/img/img3.png" alt="">
+                    <img src="/img/img3.png" alt="Age Calculator" loading="lazy">
 
                     <h2>Age Calculator</h2>
                     <p>Online tool that calculates your exact age in years/months/days, next birthday countdown, zodiac
@@ -255,7 +257,7 @@
                     <p><a href="Your Age.html" class="btn-box" target="_blank">View Project</a></p>
                 </div>
                 <div class="portfolio-item">
-                    <img src="/img/img4.png" alt="">
+                    <img src="/img/img4.png" alt="Unit Converter" loading="lazy">
 
                     <h2>Unit Converter</h2>
                     <p>A simple web-based unit converter that allows users to convert between different units of
@@ -263,20 +265,22 @@
                     <p><a href="unit%20converter.html" class="btn-box" target="_blank">View Project</a></p>
                 </div>
                 <div class="portfolio-item">
-                    <img src="/img/img2.png" alt="">
+                    <img src="/img/img2.png" alt="Music Duplicate Finder" loading="lazy">
 
                     <h2>Music duplicate finder</h2>
                     <p>A Python script that scans your music library for duplicate files based on metadata and file
                         size, helping you free up storage space and organize your collection.</p>
+                    <p><a href="https://github.com/Samuel-Muli" class="btn-box" target="_blank">View on GitHub</a></p>
                 </div>
                 <div class="portfolio-item">
-                    <img src="/img/img3.png" alt="">
+                    <img src="/img/img3.png" alt="Birthday App" loading="lazy">
 
                     <h2>Birthday App</h2>
                     <p>A desktop and android application that allows users to calculate their age, view their zodiac sign, and see fun birthday facts based on their date of birth.</p>
+                    <p><a href="https://github.com/Samuel-Muli" class="btn-box" target="_blank">View on GitHub</a></p>
                 </div>
                 <div class="portfolio-item">
-                    <img src="/img/img2.png" alt="">
+                    <img src="/img/img2.png" alt="GitHub Projects" loading="lazy">
 
                     <h2>Git Hub</h2>
                     <p>I have different projects on GitHub that you can explore.</p>
@@ -289,8 +293,8 @@
     <section class="contact" id="contact">
         <h2 class="heading">Contact <span>Me</span></h2>
 
-        <form action="https://api.web3forms.com/submit" method="POST">
-            <!-- Replace with your Access Key That is for you cloners get it from web3forms or reach me I will help out-->
+        <!-- #12: id added for JS fetch submission; method/action kept as fallback -->
+        <form id="contactForm" action="https://api.web3forms.com/submit" method="POST">
             <input type="hidden" name="access_key" value="bc5139d2-b18d-46fa-85d4-4f5a11272896">
 
             <div class="input-box">
@@ -298,20 +302,19 @@
                 <input type="email" name="email" placeholder="Email" required>
             </div>
             <div class="input-box">
-
                 <input type="number" name="Phone Number" placeholder="Phone Number" required>
                 <input type="text" name="subject" placeholder="Subject" required>
-
             </div>
 
-            <textarea name="message" id="" cols="30" rows="10" placeholder="Message" required></textarea>
+            <textarea name="message" cols="30" rows="10" placeholder="Message" required></textarea>
 
             <!-- Honeypot Spam Protection -->
             <input type="checkbox" name="botcheck" class="hidden" style="display: none;">
-            <!--Still working on my custom redirect -->
-            <!-- Custom Confirmation / Success Page -->
-            <!-- <input type="hidden" name="redirect" value="https://mywebsite.com/thanks.html"> -->
-            <input type="submit" value="Send Message" class="btn-box">
+
+            <input type="submit" value="Send Message" class="btn-box submit-contact-btn">
+
+            <!-- #12: Inline success/error feedback -->
+            <div id="formFeedback" class="form-feedback"></div>
         </form>
     </section>
 
@@ -334,8 +337,23 @@
         </p>
     </footer>
 
+    <!-- #14: Dark Mode Toggle -->
+    <button id="themeToggle" class="theme-toggle" title="Toggle Dark Mode" aria-label="Toggle Dark Mode">🌙</button>
+
+    <!-- #15: Cookie Consent Banner -->
+    <div id="cookieBanner" class="cookie-banner" style="display:none;" role="dialog" aria-label="Cookie consent">
+        <p>
+            🍪 This site uses <strong>localStorage</strong> to remember visitor data and your preferences.
+            No data is shared with third parties.
+            <a href="#" onclick="return false;">Learn more</a>
+        </p>
+        <div class="cookie-buttons">
+            <button id="cookieAccept" class="cookie-accept">Accept</button>
+            <button id="cookieReject" class="cookie-reject">Reject</button>
+        </div>
+    </div>
+
     <script src="script.js"></script>
-    <script src="https://kit.fontawesome.com/47e2788074.js" crossorigin="anonymous"></script>
     <script src="https://unpkg.com/typed.js@2.1.0/dist/typed.umd.js"></script>
 </body>
 

@@ -22,9 +22,9 @@ class VisitorTracker {
 
     initialize() {
         if (!sessionStorage.getItem(this.sessionKey)) {
-            // NOTE: trackVisit() currently sends an automatic email on every new
-            // session. Consider removing the sendNotification() call inside it
-            // and only notifying on explicit form consent (see handleVisitorForm).
+            // #3 FIX: trackVisit() no longer sends an automatic email.
+            // Notifications are only sent when the user explicitly checks
+            // "Notify Samuel" and submits the visitor form.
             this.trackVisit();
             sessionStorage.setItem(this.sessionKey, 'true');
             this.showPopup();
@@ -36,7 +36,8 @@ class VisitorTracker {
     trackVisit() {
         const visitData = this.collectVisitData();
         this.saveVisitData(visitData);
-        this.sendNotification(visitData);
+        // sendNotification() intentionally removed — consent-only (see handleVisitorForm)
+        this.fetchRealLocation(); // #11: fetch real IP & location asynchronously
     }
 
     collectVisitData() {
@@ -51,8 +52,30 @@ class VisitorTracker {
             language:         navigator.language,
             timezone:         Intl.DateTimeFormat().resolvedOptions().timeZone,
             isMobile:         /Mobi|Android/i.test(navigator.userAgent),
-            ip:               'Pending...'
+            ip:               'Fetching...',
+            city:             'Unknown',
+            country:          'Unknown'
         };
+    }
+
+    // #11: Real IP geolocation via ipapi.co (free tier – no API key required)
+    fetchRealLocation() {
+        fetch('https://ipapi.co/json/')
+            .then(r => r.json())
+            .then(data => {
+                let visits = this.getStoredVisits();
+                if (visits.length > 0) {
+                    const latest = visits[visits.length - 1];
+                    latest.ip      = data.ip      || 'Unknown';
+                    latest.city    = data.city     || 'Unknown';
+                    latest.country = data.country_name || 'Unknown';
+                    localStorage.setItem(this.storageKey, JSON.stringify(visits));
+                    this.updateDisplay();
+                }
+            })
+            .catch(() => {
+                // silently fail — geolocation is best-effort
+            });
     }
 
     saveVisitData(visitData) {
@@ -120,7 +143,7 @@ class VisitorTracker {
             [
                 visit.time,
                 visit.name || 'Anonymous',
-                this.getLocationFromIP(visit.ip),
+                this.getLocationFromIP(visit),
                 visit.isMobile ? 'Mobile' : 'Desktop'
             ].forEach(text => {
                 const span = document.createElement('span');
@@ -132,9 +155,15 @@ class VisitorTracker {
         });
     }
 
-    getLocationFromIP(ip) {
-        if (ip === 'Pending...') return 'Unknown';
-        return 'Nairobi, KE'; // placeholder – replace with real IP geo API
+    getLocationFromIP(visit) {
+        // #11: now uses real fetched location if available
+        if (visit && visit.city && visit.city !== 'Unknown') {
+            return `${visit.city}, ${visit.country || ''}`.trim().replace(/,\s*$/, '');
+        }
+        if (visit && visit.ip && visit.ip !== 'Fetching...' && visit.ip !== 'Unknown') {
+            return visit.ip;
+        }
+        return 'Unknown';
     }
 
     showPopup() {
@@ -163,11 +192,31 @@ class VisitorTracker {
 
         const adminBtn = document.getElementById('adminAccessBtn');
         if (adminBtn) {
-            let clickCount = 0;
-            document.addEventListener('click', () => {
-                clickCount++;
-                if (clickCount === 10) adminBtn.style.display = 'flex';
-            });
+            // Show after 7 CONSECUTIVE clicks on the footer copyright text
+            // within a 3-second window. Clicking anywhere else resets the counter.
+            let clickCount   = 0;
+            let resetTimer   = null;
+            const targetEl   = document.querySelector('.copyright') || document.querySelector('.footer');
+
+            if (targetEl) {
+                targetEl.style.cursor = 'default'; // no visual hint — it's a secret
+                targetEl.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    clickCount++;
+                    clearTimeout(resetTimer);
+                    resetTimer = setTimeout(() => { clickCount = 0; }, 3000);
+                    if (clickCount >= 7) {
+                        clickCount = 0;
+                        adminBtn.style.display = 'flex';
+                    }
+                });
+
+                // Any click OUTSIDE the target resets the counter
+                document.addEventListener('click', () => {
+                    clickCount = 0;
+                    clearTimeout(resetTimer);
+                });
+            }
         }
     }
 
@@ -390,6 +439,8 @@ function showBirthdayPopup() {
 function closePopup() {
     const popup = document.getElementById('birthdayPopup');
     if (popup) popup.classList.remove('active');
+    // #8 FIX: clean up all confetti elements immediately on close
+    document.querySelectorAll('.confetti').forEach(el => el.remove());
 }
 
 function createConfetti() {
@@ -582,17 +633,23 @@ document.addEventListener('DOMContentLoaded', function () {
         });
     }
 
-    /* Portfolio: Typed.js */
-    const typedTarget = document.querySelector('.typed-text');
-    if (typedTarget && typeof Typed !== 'undefined') {
-        new Typed('.typed-text', {
-            strings:   ['Mechanical Engineer.', 'Website Developer.', 'Designer.', 'Freelancer.', 'Coder.'],
-            typeSpeed:  80,
-            backSpeed:  70,
-            backDelay: 1200,
-            loop:      true,
-        });
+    /* Portfolio: Typed.js – deferred until Typed.js has loaded */
+    function initTyped() {
+        const typedTarget = document.querySelector('.typed-text');
+        if (typedTarget && typeof Typed !== 'undefined') {
+            new Typed('.typed-text', {
+                strings:   ['Mechanical Engineer.', 'Website Developer.', 'Designer.', 'Freelancer.', 'Coder.'],
+                typeSpeed:  80,
+                backSpeed:  70,
+                backDelay: 1200,
+                loop:      true,
+            });
+        } else if (typedTarget) {
+            // Typed.js not yet loaded – retry after a short delay
+            setTimeout(initTyped, 300);
+        }
     }
+    initTyped();
 
     /* Visitor tracker – initialised once here.
        Only runs when the required DOM elements exist (main portfolio page). */
@@ -601,21 +658,113 @@ document.addEventListener('DOMContentLoaded', function () {
         adminAccessBtn.style.display = 'none';
 
         // Expose dashboard globals
-        window.toggleDashboard  = toggleDashboard;
-        window.showAdminAccess  = showAdminAccess;
+        window.toggleDashboard   = toggleDashboard;
+        window.showAdminAccess   = showAdminAccess;
         window.exportVisitorData = exportVisitorData;
 
-        const tracker = new VisitorTracker();
+        new VisitorTracker();
+    }
 
-        // Add Stats button to navbar (if not already present)
-        if (navbar && !document.querySelector('.visitor-stats-btn')) {
-            const statsBtn       = document.createElement('a');
-            statsBtn.href        = '#';
-            statsBtn.className   = 'visitor-stats-btn';
-            statsBtn.innerHTML   = '<i class="fas fa-chart-bar"></i> Stats';
-            statsBtn.onclick     = (e) => { e.preventDefault(); toggleDashboard(); };
-            navbar.appendChild(statsBtn);
+    // -------------------------------------------------------
+    // #14: Dark Mode Toggle
+    // -------------------------------------------------------
+    const savedTheme = localStorage.getItem('theme') || 'light';
+    document.documentElement.setAttribute('data-theme', savedTheme);
+
+    const themeBtn = document.getElementById('themeToggle');
+    if (themeBtn) {
+        updateThemeIcon(themeBtn, savedTheme);
+        themeBtn.addEventListener('click', () => {
+            const current = document.documentElement.getAttribute('data-theme');
+            const next    = current === 'dark' ? 'light' : 'dark';
+            document.documentElement.setAttribute('data-theme', next);
+            localStorage.setItem('theme', next);
+            updateThemeIcon(themeBtn, next);
+        });
+    }
+
+    function updateThemeIcon(btn, theme) {
+        btn.innerHTML    = theme === 'dark' ? '☀️' : '🌙';
+        btn.title        = theme === 'dark' ? 'Switch to Light Mode' : 'Switch to Dark Mode';
+        btn.setAttribute('aria-label', btn.title);
+    }
+
+    // -------------------------------------------------------
+    // #15: Cookie Consent Banner
+    // -------------------------------------------------------
+    const cookieConsent = localStorage.getItem('cookieConsent');
+    if (!cookieConsent) {
+        const banner = document.getElementById('cookieBanner');
+        if (banner) banner.style.display = 'flex';
+    }
+
+    const acceptBtn = document.getElementById('cookieAccept');
+    const rejectBtn = document.getElementById('cookieReject');
+
+    if (acceptBtn) {
+        acceptBtn.addEventListener('click', () => {
+            localStorage.setItem('cookieConsent', 'accepted');
+            hideCookieBanner();
+        });
+    }
+    if (rejectBtn) {
+        rejectBtn.addEventListener('click', () => {
+            localStorage.setItem('cookieConsent', 'rejected');
+            hideCookieBanner();
+        });
+    }
+
+    function hideCookieBanner() {
+        const banner = document.getElementById('cookieBanner');
+        if (banner) {
+            banner.style.animation = 'none';
+            banner.style.transform = 'translateY(100%)';
+            banner.style.transition = 'transform 0.3s ease';
+            setTimeout(() => banner.remove(), 300);
         }
+    }
+
+    // -------------------------------------------------------
+    // #12: Contact Form – async fetch with inline feedback
+    // -------------------------------------------------------
+    const contactForm = document.getElementById('contactForm');
+    if (contactForm) {
+        contactForm.addEventListener('submit', async function (e) {
+            e.preventDefault();
+            const submitBtn  = contactForm.querySelector('.submit-contact-btn');
+            const feedback   = document.getElementById('formFeedback');
+            const formData   = new FormData(contactForm);
+            const jsonData   = Object.fromEntries(formData.entries());
+
+            if (submitBtn) { submitBtn.disabled = true; submitBtn.value = 'Sending…'; }
+            if (feedback)  { feedback.className = 'form-feedback'; feedback.textContent = ''; }
+
+            try {
+                const res  = await fetch('https://api.web3forms.com/submit', {
+                    method:  'POST',
+                    headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+                    body:    JSON.stringify(jsonData)
+                });
+                const data = await res.json();
+
+                if (data.success) {
+                    if (feedback) {
+                        feedback.textContent = '✅ Message sent! Samuel will get back to you soon.';
+                        feedback.className   = 'form-feedback success';
+                    }
+                    contactForm.reset();
+                } else {
+                    throw new Error(data.message || 'Submission failed');
+                }
+            } catch (err) {
+                if (feedback) {
+                    feedback.textContent = '❌ Something went wrong. Please try again or email directly.';
+                    feedback.className   = 'form-feedback error';
+                }
+            } finally {
+                if (submitBtn) { submitBtn.disabled = false; submitBtn.value = 'Send Message'; }
+            }
+        });
     }
 });
 
@@ -625,12 +774,7 @@ window.addEventListener('load', function () {
     const dobInput = document.getElementById('dob');
     if (!dobInput) return; // not on age calculator page
 
-    defaultDate = new Date();
-    defaultDate.setFullYear(defaultDate.getFullYear() - 30);
-    defaultDate.setHours(12, 0, 0, 0);
-
-    const pad = n => String(n).padStart(2, '0');
-    dobInput.value = `${defaultDate.getFullYear()}-${pad(defaultDate.getMonth()+1)}-${pad(defaultDate.getDate())}T${pad(defaultDate.getHours())}:${pad(defaultDate.getMinutes())}`;
-
+    // Leave the field empty so the user enters their own date.
+    // (A 30-year placeholder was removed — not everyone visiting is 30.)
     setupDateScrolling();
 });

@@ -4,164 +4,274 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Smart Unit Converter</title>
-  <link rel="stylesheet" href="style.css">
-
-  <!-- PWA Manifest -->
-  <link rel="manifest" href="manifest.json">
+  <link rel="stylesheet" href="styles.css">
   <meta name="theme-color" content="#007bff">
-
-  <!-- Icons -->
-  <link rel="apple-touch-icon" href="icons/icon-192.png">
+  <link rel="icon" href="img/image.png" type="image/png">
+  <!-- Apply saved theme before render to avoid flash -->
+  <script>
+    (function() {
+      var t = localStorage.getItem('theme') || 'light';
+      document.documentElement.setAttribute('data-theme', t);
+    })();
+  </script>
   <style>
+    /* Inherit theme variables set on <html> by script.js */
+    :root {
+      --uc-bg: #f4f8fb;
+      --uc-card: #fff;
+      --uc-text: #333;
+      --uc-border: #ccc;
+      --uc-result-bg: #f0f9ff;
+      --uc-result-border: #007bff;
+      --uc-result-color: #0056b3;
+      --uc-history-bg: #f9f9f9;
+      --uc-cat-bg: #e3f2fd;
+      --uc-shortcut-bg: #fff8e1;
+    }
+
+    [data-theme="dark"] {
+      --uc-bg: #0d1117;
+      --uc-card: #161b22;
+      --uc-text: #c9d1d9;
+      --uc-border: #30363d;
+      --uc-result-bg: #0d2137;
+      --uc-result-border: #0ef;
+      --uc-result-color: #0ef;
+      --uc-history-bg: #1c2128;
+      --uc-cat-bg: #1c2a3a;
+      --uc-shortcut-bg: #2a2200;
+    }
+
     body {
-  font-family: Arial, sans-serif;
-  margin: 0;
-  padding: 20px;
-  background: #f4f8fb;
-  color: #333;
-}
+      font-family: Arial, sans-serif;
+      margin: 0;
+      padding: 20px;
+      background: var(--uc-bg);
+      color: var(--uc-text);
+      transition: background 0.3s ease, color 0.3s ease;
+    }
 
-.app-container {
-  max-width: 500px;
-  margin: auto;
-  background: #fff;
-  padding: 20px;
-  border-radius: 12px;
-  box-shadow: 0 4px 10px rgba(0,0,0,0.1);
-}
+    .app-container {
+      max-width: 500px;
+      margin: auto;
+      background: var(--uc-card);
+      padding: 20px;
+      border-radius: 12px;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+      transition: background 0.3s ease;
+    }
 
-h1 {
-  text-align: center;
-  color: #007bff;
-}
+    h1 {
+      text-align: center;
+      color: #007bff;
+    }
 
-.categories {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
-  justify-content: center;
-  margin-bottom: 20px;
-}
+    h2 {
+      color: var(--uc-text);
+    }
 
-.category-btn {
-  padding: 8px 12px;
-  border: none;
-  border-radius: 6px;
-  cursor: pointer;
-  background: #e3f2fd;
-  color: #007bff;
-  font-weight: bold;
-}
+    .categories {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      justify-content: center;
+      margin-bottom: 20px;
+    }
 
-.category-btn.active {
-  background: #007bff;
-  color: #fff;
-}
+    .category-btn {
+      padding: 8px 12px;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      background: var(--uc-cat-bg);
+      color: #007bff;
+      font-weight: bold;
+      transition: background 0.3s ease;
+    }
 
-.converter-section {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
-  justify-content: center;
-}
+    .category-btn.active {
+      background: #007bff;
+      color: #fff;
+    }
 
-input, select, button {
-  padding: 10px;
-  border-radius: 6px;
-  border: 1px solid #ccc;
-  font-size: 16px;
-}
+    .converter-section {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      justify-content: center;
+    }
 
-#swap-btn {
-  background: #f1f1f1;
-  cursor: pointer;
-}
+    input, select {
+      padding: 10px;
+      border-radius: 6px;
+      border: 1px solid var(--uc-border);
+      font-size: 16px;
+      background: var(--uc-card);
+      color: var(--uc-text);
+      transition: background 0.3s ease, color 0.3s ease, border-color 0.3s ease;
+    }
 
-.convert-btn-wrapper {
-  width: 100%;
-  text-align: center;
-  margin-top: 12px;
-}
+    button {
+      padding: 10px;
+      border-radius: 6px;
+      border: 1px solid var(--uc-border);
+      font-size: 16px;
+    }
 
-.convert-btn {
-  width: 100%;
-  background: #007bff;
-  color: white;
-  font-weight: bold;
-  border: none;
-  padding: 12px;
-  border-radius: 8px;
-  cursor: pointer;
-}
+    #swap-btn {
+      background: var(--uc-history-bg);
+      color: var(--uc-text);
+      cursor: pointer;
+      transition: background 0.3s ease;
+    }
 
-.result {
-  margin-top: 20px;
-  padding: 15px;
-  background: #f0f9ff;
-  border-left: 5px solid #007bff;
-  border-radius: 8px;
-  font-size: 18px;
-  font-weight: bold;
-  color: #0056b3;
-  box-shadow: 0 2px 6px rgba(0,0,0,0.1);
-  text-align: center;
-}
+    .convert-btn-wrapper {
+      width: 100%;
+      text-align: center;
+      margin-top: 12px;
+    }
 
-ul#history-list {
-  list-style: none;
-  padding: 0;
-}
+    .convert-btn {
+      width: 100%;
+      background: #007bff;
+      color: white;
+      font-weight: bold;
+      border: none;
+      padding: 12px;
+      border-radius: 8px;
+      cursor: pointer;
+    }
 
-ul#history-list li {
-  padding: 6px;
-  margin: 4px 0;
-  background: #f9f9f9;
-  border-radius: 6px;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-}
+    .result {
+      margin-top: 20px;
+      padding: 15px;
+      background: var(--uc-result-bg);
+      border-left: 5px solid var(--uc-result-border);
+      border-radius: 8px;
+      font-size: 18px;
+      font-weight: bold;
+      color: var(--uc-result-color);
+      box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+      text-align: center;
+      transition: background 0.3s ease, color 0.3s ease, border-color 0.3s ease;
+    }
 
-ul#history-list button {
-  background: transparent;
-  border: none;
-  cursor: pointer;
-  color: red;
-  font-size: 18px;
-}
+    ul#history-list {
+      list-style: none;
+      padding: 0;
+    }
 
-.shortcuts {
-  margin-top: 20px;
-  padding: 15px;
-  background: #fff8e1;
-  border-left: 5px solid #ff9800;
-  border-radius: 8px;
-}
+    ul#history-list li {
+      padding: 6px;
+      margin: 4px 0;
+      background: var(--uc-history-bg);
+      border-radius: 6px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      color: var(--uc-text);
+      transition: background 0.3s ease;
+    }
 
-.hidden {
-  display: none;
-}
+    ul#history-list button {
+      background: transparent;
+      border: none;
+      cursor: pointer;
+      color: red;
+      font-size: 18px;
+    }
 
-.install-wrapper {
-  text-align: center;
-  margin-top: 20px;
-}
+    .shortcuts {
+      margin-top: 20px;
+      padding: 15px;
+      background: var(--uc-shortcut-bg);
+      border-left: 5px solid #ff9800;
+      border-radius: 8px;
+      color: var(--uc-text);
+      transition: background 0.3s ease;
+    }
 
-.install-btn {
-  background: #28a745;
-  color: white;
-  font-size: 16px;
-  padding: 12px 20px;
-  border: none;
-  border-radius: 8px;
-  cursor: pointer;
-  font-weight: bold;
-}
+    .hidden {
+      display: none;
+    }
 
-.install-btn:hover {
-  background: #218838;
-}
+    .install-wrapper {
+      text-align: center;
+      margin-top: 20px;
+    }
 
+    .install-btn {
+      background: #28a745;
+      color: white;
+      font-size: 16px;
+      padding: 12px 20px;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      font-weight: bold;
+    }
+
+    .install-btn:hover {
+      background: #218838;
+    }
+
+    /* Theme toggle for unit converter */
+    .theme-toggle {
+      position: fixed;
+      bottom: 2rem;
+      right: 2rem;
+      width: 44px;
+      height: 44px;
+      background: #007bff;
+      color: #fff;
+      border: none;
+      border-radius: 50%;
+      font-size: 1.4rem;
+      cursor: pointer;
+      z-index: 9999;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 0 12px rgba(0,123,255,0.5);
+      transition: transform 0.3s, box-shadow 0.3s;
+    }
+
+    .theme-toggle:hover {
+      transform: scale(1.1);
+    }
+
+    /* Cookie banner */
+    .cookie-banner {
+      position: fixed;
+      bottom: 0; left: 0;
+      width: 100%;
+      background: var(--uc-card);
+      border-top: 3px solid #007bff;
+      padding: 1rem 2rem;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 1rem;
+      z-index: 99999;
+      box-shadow: 0 -4px 15px rgba(0,0,0,0.15);
+      font-size: 14px;
+      color: var(--uc-text);
+    }
+
+    .cookie-buttons { display: flex; gap: 0.8rem; }
+
+    .cookie-accept, .cookie-reject {
+      padding: 6px 16px;
+      border: none;
+      border-radius: 20px;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+    }
+
+    .cookie-accept { background: #007bff; color: #fff; }
+    .cookie-reject { background: transparent; border: 2px solid #007bff; color: #007bff; }
   </style>
 </head>
 <body>
@@ -200,7 +310,12 @@ ul#history-list button {
       <li>No conversion history yet</li>
     </ul>
 
-    <!-- Shortcuts help -->
+    <!-- Shortcuts help – now toggled by button OR pressing ? -->
+    <div style="text-align:center; margin-top:15px;">
+      <button id="shortcuts-toggle" style="background:#fff8e1; border:2px solid #ff9800; color:#e65100; padding:8px 16px; border-radius:6px; cursor:pointer; font-weight:bold; font-size:14px;">
+        ⌨️ Keyboard Shortcuts <span style="opacity:0.6;">(or press ?)</span>
+      </button>
+    </div>
     <div id="shortcuts-panel" class="shortcuts hidden">
       <h3>⌨️ Keyboard Shortcuts</h3>
       <ul>
@@ -287,10 +402,11 @@ ul#history-list button {
       unitToSelect.addEventListener('change', performConversion);
 
       document.addEventListener('keydown', (e) => {
+        if (document.activeElement.tagName === 'INPUT') return;
         if (e.key === "Enter") { e.preventDefault(); performConversion(); }
         if (e.ctrlKey && e.shiftKey && e.key.toLowerCase() === "c") { e.preventDefault(); clearHistory(); }
         if (e.ctrlKey && e.shiftKey && e.key.toLowerCase() === "s") { e.preventDefault(); swapUnits(); }
-        if (e.key === "?") { e.preventDefault(); toggleOverlay(); }
+        // '?' is handled by the outer keydown listener above
       });
 
       setCategory('length');
@@ -395,17 +511,84 @@ ul#history-list button {
       updateHistoryDisplay();
     }
 
-    function toggleOverlay() {
-      overlay.style.display = overlay.style.display === 'flex' ? 'none' : 'flex';
+    // #5 FIX: toggleOverlay was referencing a non-existent #overlay element.
+    // Now correctly toggles the #shortcuts-panel element.
+    function toggleShortcutsPanel() {
+      const panel = document.getElementById('shortcuts-panel');
+      if (panel) panel.classList.toggle('hidden');
     }
 
+    document.addEventListener('keydown', (e) => {
+      // Ignore if typing in input
+      if (e.target.tagName === 'INPUT') return;
+      if (e.key === '?') { e.preventDefault(); toggleShortcutsPanel(); }
+    });
+
+    // Start converter when DOM is ready
     window.addEventListener('DOMContentLoaded', initConverter);
-    // Register Service Worker
-    if ('serviceWorker' in navigator) {
-      navigator.serviceWorker.register('sw.js')
-        .then(() => console.log("✅ Service Worker Registered"))
-        .catch(err => console.log("SW Fail:", err));
-    }
+
+    // #4 FIX: Service Worker & manifest removed – files don't exist (would cause 404).
+    // Uncomment and add sw.js + manifest.json to enable PWA properly.
+    // if ('serviceWorker' in navigator) { navigator.serviceWorker.register('sw.js'); }
+
+    // ---- Dark mode & cookie banner (shared logic) ----
+    (function () {
+      // Apply saved theme immediately
+      const savedTheme = localStorage.getItem('theme') || 'light';
+      document.documentElement.setAttribute('data-theme', savedTheme);
+
+      window.addEventListener('DOMContentLoaded', function () {
+        // Theme toggle
+        const themeBtn = document.getElementById('themeToggle');
+        if (themeBtn) {
+          themeBtn.innerHTML = savedTheme === 'dark' ? '☀️' : '🌙';
+          themeBtn.addEventListener('click', () => {
+            const current = document.documentElement.getAttribute('data-theme');
+            const next = current === 'dark' ? 'light' : 'dark';
+            document.documentElement.setAttribute('data-theme', next);
+            localStorage.setItem('theme', next);
+            themeBtn.innerHTML = next === 'dark' ? '☀️' : '🌙';
+          });
+        }
+
+        // Cookie banner
+        if (!localStorage.getItem('cookieConsent')) {
+          const banner = document.getElementById('cookieBanner');
+          if (banner) banner.style.display = 'flex';
+        }
+        document.getElementById('cookieAccept')?.addEventListener('click', () => {
+          localStorage.setItem('cookieConsent', 'accepted');
+          dismissBanner();
+        });
+        document.getElementById('cookieReject')?.addEventListener('click', () => {
+          localStorage.setItem('cookieConsent', 'rejected');
+          dismissBanner();
+        });
+        function dismissBanner() {
+          const b = document.getElementById('cookieBanner');
+          if (b) { b.style.transition = 'transform 0.3s ease'; b.style.transform = 'translateY(100%)'; setTimeout(() => b.remove(), 300); }
+        }
+
+        // Shortcuts toggle button
+        const shortcutsToggle = document.getElementById('shortcuts-toggle');
+        if (shortcutsToggle) {
+          shortcutsToggle.addEventListener('click', toggleShortcutsPanel);
+        }
+      });
+    })();
   </script>
+
+  <!-- #14: Dark Mode Toggle -->
+  <button id="themeToggle" class="theme-toggle" title="Toggle Dark Mode" aria-label="Toggle Dark Mode">🌙</button>
+
+  <!-- #15: Cookie Consent Banner -->
+  <div id="cookieBanner" class="cookie-banner" style="display:none;" role="dialog" aria-label="Cookie consent">
+    <p>🍪 This site uses <strong>localStorage</strong> for conversion history and preferences. No data is shared.</p>
+    <div class="cookie-buttons">
+      <button id="cookieAccept" class="cookie-accept">Accept</button>
+      <button id="cookieReject" class="cookie-reject">Reject</button>
+    </div>
+  </div>
+
 </body>
 </html>

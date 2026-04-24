@@ -25,11 +25,30 @@
     --snd-bg-color: #f9f9f0;
     --text-color: #333;
     --main-color: #0ef;
+    --header-bg: var(--main-color);
+    --card-shadow: rgba(0,0,0,0.1);
+    --transition-speed: 0.3s;
+}
+
+/* Dark Mode */
+[data-theme="dark"] {
+    --bg-color: #0d1117;
+    --snd-bg-color: #161b22;
+    --text-color: #c9d1d9;
+    --main-color: #0ef;
+    --card-shadow: rgba(0,0,0,0.4);
 }
 
 html {
     font-size: 62.5%;
     color: var(--text-color);
+    background-color: var(--bg-color);
+    transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+body {
+    background-color: var(--bg-color);
+    transition: background-color 0.3s ease, color 0.3s ease;
 }
 
 section {
@@ -102,6 +121,7 @@ section {
     width: 100%;
     justify-content: flex-start;
     height: 100vh;
+    background-color: var(--bg-color);
     background-size: cover;
     display: flex;
     align-items: center;
@@ -151,6 +171,8 @@ section {
     opacity: 0;
     animation: slideBottom 1s ease forwards;
     animation-delay: .7s;
+    color: var(--text-color);
+    transition: color 0.3s ease;
 }
 
 .home-content h3:nth-of-type(2) {
@@ -172,6 +194,7 @@ section {
     position: relative;
     color: var(--text-color);
     overflow: hidden;
+    transition: color 0.3s ease;
 }
 
 .home-content h1::before {
@@ -196,6 +219,8 @@ section {
     opacity: 0;
     animation: slideLeft 1s ease forwards;
     animation-delay: 1s;
+    color: var(--text-color);
+    transition: color 0.3s ease;
 }
 
 .home-sci a {
@@ -431,7 +456,7 @@ section {
 
 .contact h2 {
     margin-bottom: 3rem;
-    color: #000;
+    color: var(--text-color);
 }
 
 .contact form {
@@ -458,6 +483,18 @@ section {
     border: 0.25rem solid var(--main-color);
     margin: 1rem 0;
     resize: none;
+    transition: color 0.3s ease, background-color 0.3s ease, border-color 0.3s ease;
+}
+
+.contact form .input-box input::placeholder,
+.contact form textarea::placeholder {
+    color: #888;
+    opacity: 1;
+}
+
+[data-theme="dark"] .contact form .input-box input::placeholder,
+[data-theme="dark"] .contact form textarea::placeholder {
+    color: #6e7681;
 }
 
 .contact form .input-box input {
@@ -916,8 +953,175 @@ section {
 }
 
 
-/* -------------------------------------------------------
-   SECTION 2 – AGE CALCULATOR PAGE  (styless.css)
+/* Smooth theme transitions */
+body, .header, section, .footer, .about, .portfolio,
+.contact, .services-container .services-box,
+.portfolio-item, .popup-content, .visitor-dashboard {
+    transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease;
+}
+
+/* Dark Mode Toggle Button */
+.theme-toggle {
+    position: fixed;
+    bottom: 7rem;
+    right: 2rem;
+    width: 50px;
+    height: 50px;
+    background: var(--main-color);
+    color: #081b29;
+    border: none;
+    border-radius: 50%;
+    font-size: 1.6rem;
+    cursor: pointer;
+    z-index: 9999;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 0 15px var(--main-color);
+    transition: transform 0.3s, box-shadow 0.3s;
+}
+
+.theme-toggle:hover {
+    transform: scale(1.1);
+    box-shadow: 0 0 25px var(--main-color);
+}
+
+/* Cookie Consent Banner */
+.cookie-banner {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    background: var(--snd-bg-color);
+    border-top: 3px solid var(--main-color);
+    padding: 1.5rem 3rem;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 1.5rem;
+    z-index: 99999;
+    box-shadow: 0 -4px 20px rgba(0,0,0,0.15);
+    animation: slideUpBanner 0.4s ease;
+}
+
+@keyframes slideUpBanner {
+    from { transform: translateY(100%); }
+    to   { transform: translateY(0); }
+}
+
+.cookie-banner p {
+    font-size: 1.4rem;
+    color: var(--text-color);
+    flex: 1;
+    min-width: 200px;
+}
+
+.cookie-banner p a {
+    color: var(--main-color);
+    text-decoration: underline;
+    font-size: 1.4rem;
+}
+
+.cookie-buttons {
+    display: flex;
+    gap: 1rem;
+}
+
+.cookie-accept, .cookie-reject {
+    padding: 0.8rem 2rem;
+    border: none;
+    border-radius: 5rem;
+    font-size: 1.4rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: 0.3s;
+}
+
+.cookie-accept {
+    background: var(--main-color);
+    color: #081b29;
+}
+
+.cookie-accept:hover {
+    box-shadow: 0 0 15px var(--main-color);
+}
+
+.cookie-reject {
+    background: transparent;
+    border: 2px solid var(--main-color);
+    color: var(--main-color);
+}
+
+.cookie-reject:hover {
+    background: var(--main-color);
+    color: #081b29;
+}
+
+/* Contact form feedback */
+.form-feedback {
+    margin-top: 1.5rem;
+    padding: 1.5rem 2rem;
+    border-radius: 1rem;
+    font-size: 1.6rem;
+    font-weight: 600;
+    text-align: center;
+    display: none;
+}
+
+.form-feedback.success {
+    background: rgba(46, 204, 113, 0.15);
+    border: 2px solid #2ecc71;
+    color: #2ecc71;
+    display: block;
+}
+
+.form-feedback.error {
+    background: rgba(231, 76, 60, 0.15);
+    border: 2px solid #e74c3c;
+    color: #e74c3c;
+    display: block;
+}
+
+.btn-box[disabled] {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
+/* Dark mode overrides for age calc page */
+[data-theme="dark"] body.age-calc-body {
+    background: linear-gradient(135deg, #0d1117, #1a0a0a, #0d1117);
+}
+
+[data-theme="dark"] .age-calc-page .container,
+[data-theme="dark"] body.age-calc-body .container {
+    background: rgba(22, 27, 34, 0.98);
+}
+
+[data-theme="dark"] .card {
+    background: #1c2128;
+}
+
+[data-theme="dark"] .card-header {
+    background: #161b22;
+    border-bottom-color: #30363d;
+}
+
+[data-theme="dark"] .card-header h3,
+[data-theme="dark"] .unit-label {
+    color: #c9d1d9;
+}
+
+[data-theme="dark"] .time-unit {
+    border-bottom-color: #30363d;
+}
+
+[data-theme="dark"] body.age-calc-body .footer {
+    border-top-color: #30363d;
+    color: #8b949e;
+}
+
+
    Scoped under .age-calc-page where possible; global
    resets intentionally omitted (already set above).
    ------------------------------------------------------- */
@@ -958,6 +1162,7 @@ body.age-calc-body .container {
     overflow: hidden;
     position: relative;
     z-index: 10;
+    margin: auto;
 }
 
 /* Header */
