@@ -11,25 +11,36 @@
    SECTION 1 – VISITOR TRACKER  (visitor-tracker.js)
    ------------------------------------------------------- */
 
+/* =======================================================
+   GOOGLE SHEETS BACKEND CONFIG
+   After deploying google-sheet-backend.js as a Google
+   Apps Script Web App, paste the Web App URL below.
+   Leave as empty string '' to run in localStorage-only mode.
+   ======================================================= */
+const SHEET_CONFIG = {
+    sheetScriptUrl: 'https://script.google.com/macros/s/AKfycbx05R50tPDK5zuN-iA5AcTm3APKztJexr5Z2D14Dld7JDewTyw10H-kh7QIkCYGL8xe/exec',   // ← paste your Apps Script Web App URL here
+    enabled: function () { return !!this.sheetScriptUrl; }
+};
+
+
 class VisitorTracker {
     constructor() {
-        this.apiUrl     = 'https://api.web3forms.com/submit';
-        this.accessKey  = 'bc5139d2-b18d-46fa-85d4-4f5a11272896';
+        this.apiUrl = 'https://api.web3forms.com/submit';
+        this.accessKey = 'bc5139d2-b18d-46fa-85d4-4f5a11272896';
         this.storageKey = 'samuel_muli_visitor_data';
         this.sessionKey = 'visitor_session';
+        this.sheetTotals = null; // cached {total, today} fetched from sheet
         this.initialize();
     }
 
     initialize() {
         if (!sessionStorage.getItem(this.sessionKey)) {
-            // #3 FIX: trackVisit() no longer sends an automatic email.
-            // Notifications are only sent when the user explicitly checks
-            // "Notify Samuel" and submits the visitor form.
             this.trackVisit();
             sessionStorage.setItem(this.sessionKey, 'true');
             this.showPopup();
         }
-        this.updateDisplay();
+        // Fetch real totals from sheet (non-blocking), then refresh display
+        this.fetchSheetTotals().finally(() => this.updateDisplay());
         this.setupEventListeners();
     }
 
@@ -42,19 +53,19 @@ class VisitorTracker {
 
     collectVisitData() {
         return {
-            timestamp:        new Date().toISOString(),
-            date:             new Date().toLocaleDateString(),
-            time:             new Date().toLocaleTimeString(),
-            page:             window.location.href,
-            referrer:         document.referrer || 'Direct',
-            userAgent:        navigator.userAgent,
+            timestamp: new Date().toISOString(),
+            date: new Date().toLocaleDateString(),
+            time: new Date().toLocaleTimeString(),
+            page: window.location.href,
+            referrer: document.referrer || 'Direct',
+            userAgent: navigator.userAgent,
             screenResolution: `${window.screen.width}x${window.screen.height}`,
-            language:         navigator.language,
-            timezone:         Intl.DateTimeFormat().resolvedOptions().timeZone,
-            isMobile:         /Mobi|Android/i.test(navigator.userAgent),
-            ip:               'Fetching...',
-            city:             'Unknown',
-            country:          'Unknown'
+            language: navigator.language,
+            timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
+            isMobile: /Mobi|Android/i.test(navigator.userAgent),
+            ip: 'Fetching...',
+            city: 'Unknown',
+            country: 'Unknown'
         };
     }
 
@@ -66,15 +77,78 @@ class VisitorTracker {
                 let visits = this.getStoredVisits();
                 if (visits.length > 0) {
                     const latest = visits[visits.length - 1];
-                    latest.ip      = data.ip      || 'Unknown';
-                    latest.city    = data.city     || 'Unknown';
+                    latest.ip = data.ip || 'Unknown';
+                    latest.city = data.city || 'Unknown';
                     latest.country = data.country_name || 'Unknown';
+                    latest.location = latest.city !== 'Unknown'
+                        ? `${latest.city}, ${latest.country}`
+                        : (latest.ip || 'Unknown');
                     localStorage.setItem(this.storageKey, JSON.stringify(visits));
+                    // Now that we have IP/location, log the complete visit to the sheet
+                    this.logToSheet(latest);
                     this.updateDisplay();
                 }
             })
             .catch(() => {
-                // silently fail — geolocation is best-effort
+                // IP fetch failed — still log to sheet with whatever we have
+                const visits = this.getStoredVisits();
+                if (visits.length > 0) this.logToSheet(visits[visits.length - 1]);
+            });
+    }
+
+    // ── Google Sheets: log a visit row ──────────────────────────────
+    logToSheet(visitData) {
+        if (!SHEET_CONFIG.enabled()) return; // sheet not configured yet
+
+        const payload = {
+            timestamp: visitData.timestamp,
+            date: visitData.date,
+            time: visitData.time,
+            name: visitData.visitor_name || visitData.name || '',
+            email: visitData.visitor_email || visitData.email || '',
+            purpose: visitData.visitor_purpose || visitData.purpose || '',
+            ip: visitData.ip || '',
+            location: visitData.location || '',
+            isMobile: visitData.isMobile,
+            screenResolution: visitData.screenResolution || '',
+            userAgent: visitData.userAgent || '',
+            page: visitData.page || '',
+            referrer: visitData.referrer || '',
+            notify_me: visitData.notify_me || false,
+            botcheck: ''   // honeypot — always empty from legit client
+        };
+
+        // IMPORTANT: Must use 'text/plain' not 'application/json'.
+        // Apps Script cannot handle the CORS OPTIONS preflight that 'application/json' triggers,
+        // so the POST would silently fail. text/plain skips the preflight entirely.
+        fetch(SHEET_CONFIG.sheetScriptUrl, {
+            method: 'POST',
+            headers: { 'Content-Type': 'text/plain' },
+            body: JSON.stringify(payload)
+        })
+            .then(r => r.json())
+            .then(res => {
+                if (res.success && res.total !== undefined) {
+                    // Update cached totals from the authoritative sheet count
+                    if (!this.sheetTotals) this.sheetTotals = {};
+                    this.sheetTotals.total = res.total;
+                    this.updateDisplay();
+                }
+            })
+            .catch(() => { /* sheet logging is best-effort — localStorage is the fallback */ });
+    }
+
+    // ── Google Sheets: fetch current total/today counts (GET) ───────
+    fetchSheetTotals() {
+        if (!SHEET_CONFIG.enabled()) return Promise.resolve(null);
+
+        return fetch(SHEET_CONFIG.sheetScriptUrl)
+            .then(r => r.json())
+            .then(data => {
+                this.sheetTotals = { total: data.total || 0, today: data.today || 0 };
+            })
+            .catch(() => {
+                this.sheetTotals = null; // fall back to localStorage counts
             });
     }
 
@@ -97,24 +171,47 @@ class VisitorTracker {
     }
 
     updateDisplay() {
-        const visits      = this.getStoredVisits();
+        const visits = this.getStoredVisits();
         const todayVisits = this.getTodayVisits();
+
+        // Prefer authoritative sheet totals; fall back to localStorage counts
+        const totalCount = (this.sheetTotals && this.sheetTotals.total !== undefined)
+            ? this.sheetTotals.total
+            : visits.length;
+        const todayCount = (this.sheetTotals && this.sheetTotals.today !== undefined)
+            ? this.sheetTotals.today
+            : todayVisits.length;
 
         const set = (id, val) => {
             const el = document.getElementById(id);
             if (el) el.textContent = val;
         };
 
-        set('totalVisitsCount', visits.length);
-        set('todayVisitsCount', todayVisits.length);
-        set('totalVisits',      todayVisits.length);
-        set('siteVisits',       visits.length);
+        set('totalVisitsCount', totalCount);
+        set('todayVisitsCount', todayCount);
+        set('totalVisits', todayCount);
+        set('siteVisits', totalCount);
 
         const uniqueIPs = [...new Set(visits.map(v => v.ip))];
         set('uniqueVisitors', uniqueIPs.length);
 
         const detailedVisits = visits.filter(v => v.name || v.email);
         set('detailedVisits', detailedVisits.length);
+
+        // Show a small indicator if sheet is connected
+        const sheetStatus = document.getElementById('sheetStatus');
+        if (sheetStatus) {
+            if (SHEET_CONFIG.enabled() && this.sheetTotals) {
+                sheetStatus.textContent = '🟢 Sheet connected';
+                sheetStatus.style.color = '#2ecc71';
+            } else if (SHEET_CONFIG.enabled()) {
+                sheetStatus.textContent = '🟡 Connecting to sheet…';
+                sheetStatus.style.color = '#f39c12';
+            } else {
+                sheetStatus.textContent = '⚪ Sheet not configured (localStorage only)';
+                sheetStatus.style.color = '#888';
+            }
+        }
 
         this.updateVisitorList();
     }
@@ -194,9 +291,9 @@ class VisitorTracker {
         if (adminBtn) {
             // Show after 7 CONSECUTIVE clicks on the footer copyright text
             // within a 3-second window. Clicking anywhere else resets the counter.
-            let clickCount   = 0;
-            let resetTimer   = null;
-            const targetEl   = document.querySelector('.copyright') || document.querySelector('.footer');
+            let clickCount = 0;
+            let resetTimer = null;
+            const targetEl = document.querySelector('.copyright') || document.querySelector('.footer');
 
             if (targetEl) {
                 targetEl.style.cursor = 'default'; // no visual hint — it's a secret
@@ -221,15 +318,22 @@ class VisitorTracker {
     }
 
     handleVisitorForm(form) {
-        const formData   = new FormData(form);
+        const formData = new FormData(form);
         const visitorData = Object.fromEntries(formData.entries());
 
+        // Merge form data into the latest stored visit
         let visits = this.getStoredVisits();
+        let mergedVisit = {};
         if (visits.length > 0) {
             Object.assign(visits[visits.length - 1], visitorData);
+            mergedVisit = visits[visits.length - 1];
             localStorage.setItem(this.storageKey, JSON.stringify(visits));
         }
 
+        // Log enriched record (with name/email/purpose) to Google Sheet
+        this.logToSheet({ ...mergedVisit, notify_me: formData.get('notify_me') === 'on' });
+
+        // Send email via Web3forms only if user explicitly requested it
         if (formData.get('notify_me') === 'on') {
             this.sendDetailedNotification(visitorData);
         }
@@ -241,10 +345,10 @@ class VisitorTracker {
     sendNotification(visitData) {
         const emailData = {
             access_key: this.accessKey,
-            subject:    '🚀 New Website Visit Notification',
-            from_name:  'Website Visitor System',
-            message:    this.formatNotificationMessage(visitData),
-            botcheck:   ''
+            subject: '🚀 New Website Visit Notification',
+            from_name: 'Website Visitor System',
+            message: this.formatNotificationMessage(visitData),
+            botcheck: ''
         };
 
         fetch(this.apiUrl, {
@@ -257,10 +361,10 @@ class VisitorTracker {
     sendDetailedNotification(visitorData) {
         const emailData = {
             access_key: this.accessKey,
-            subject:    '👤 Visitor Details Received',
-            from_name:  'Website Visitor System',
-            message:    this.formatDetailedMessage(visitorData),
-            botcheck:   ''
+            subject: '👤 Visitor Details Received',
+            from_name: 'Website Visitor System',
+            message: this.formatDetailedMessage(visitorData),
+            botcheck: ''
         };
 
         fetch(this.apiUrl, {
@@ -291,8 +395,8 @@ Total Visits Today: ${this.getTodayVisits().length}
         return `
 👤 Visitor Details Submitted!
 
-Name:    ${visitorData.visitor_name    || 'Not provided'}
-Email:   ${visitorData.visitor_email   || 'Not provided'}
+Name:    ${visitorData.visitor_name || 'Not provided'}
+Email:   ${visitorData.visitor_email || 'Not provided'}
 Purpose: ${visitorData.visitor_purpose || 'Not specified'}
 
 🕒 Visit Time: ${new Date().toLocaleString()}
@@ -305,12 +409,12 @@ This visitor chose to notify you about their visit.
 
     exportVisitorData() {
         const visits = this.getStoredVisits();
-        const csv    = this.convertToCSV(visits);
-        const blob   = new Blob([csv], { type: 'text/csv' });
-        const url    = window.URL.createObjectURL(blob);
-        const a      = document.createElement('a');
-        a.href       = url;
-        a.download   = `visitor-data-${new Date().toISOString().split('T')[0]}.csv`;
+        const csv = this.convertToCSV(visits);
+        const blob = new Blob([csv], { type: 'text/csv' });
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `visitor-data-${new Date().toISOString().split('T')[0]}.csv`;
         document.body.appendChild(a);
         a.click();
         document.body.removeChild(a);
@@ -320,7 +424,7 @@ This visitor chose to notify you about their visit.
     convertToCSV(data) {
         if (!data.length) return '';
         const headers = Object.keys(data[0]);
-        const rows    = data.map(row =>
+        const rows = data.map(row =>
             headers.map(h => JSON.stringify(row[h] ?? '')).join(',')
         );
         return [headers.join(','), ...rows].join('\n');
@@ -337,6 +441,13 @@ function toggleDashboard() {
         const tracker = new VisitorTracker();
         tracker.updateDisplay();
     }
+}
+
+function refreshDashboard() {
+    if (!window._trackerInstance) return;
+    window._trackerInstance.fetchSheetTotals().finally(() => {
+        window._trackerInstance.updateDisplay();
+    });
 }
 
 function showAdminAccess() {
@@ -444,14 +555,14 @@ function closePopup() {
 }
 
 function createConfetti() {
-    const colors    = ['#e74c3c', '#3498db', '#2ecc71', '#f1c40f', '#9b59b6', '#1abc9c'];
+    const colors = ['#e74c3c', '#3498db', '#2ecc71', '#f1c40f', '#9b59b6', '#1abc9c'];
     for (let i = 0; i < 150; i++) {
-        const el       = document.createElement('div');
-        el.className   = 'confetti';
-        el.style.left  = Math.random() * 100 + 'vw';
-        el.style.backgroundColor   = colors[Math.floor(Math.random() * colors.length)];
+        const el = document.createElement('div');
+        el.className = 'confetti';
+        el.style.left = Math.random() * 100 + 'vw';
+        el.style.backgroundColor = colors[Math.floor(Math.random() * colors.length)];
         el.style.animationDuration = (Math.random() * 3 + 2) + 's';
-        el.style.width  = (Math.random() * 10 + 5) + 'px';
+        el.style.width = (Math.random() * 10 + 5) + 'px';
         el.style.height = (Math.random() * 10 + 5) + 'px';
         document.body.appendChild(el);
         setTimeout(() => el.remove(), 5000);
@@ -460,11 +571,11 @@ function createConfetti() {
 
 function updateRealTime() {
     const now = new Date();
-    updateCard('current-age',   calculateDetailedDifference(birthDate, now), true);
+    updateCard('current-age', calculateDetailedDifference(birthDate, now), true);
     updateCard('next-birthday', calculateDetailedDifference(now, nextBirthday), true);
 
     if (birthDate.getMonth() === now.getMonth() &&
-        birthDate.getDate()  === now.getDate()  && !birthdayPopupShown) {
+        birthDate.getDate() === now.getDate() && !birthdayPopupShown) {
         showBirthdayPopup();
     }
 }
@@ -472,16 +583,16 @@ function updateRealTime() {
 function calculateDetailedDifference(startDate, endDate) {
     let ms = endDate - startDate;
 
-    const seconds     = Math.floor(ms / 1000);
+    const seconds = Math.floor(ms / 1000);
     const milliseconds = ms % 1000;
-    const minutes     = Math.floor(seconds / 60);
-    const remainSecs  = seconds % 60;
-    const hours       = Math.floor(minutes / 60);
-    const remainMins  = minutes % 60;
+    const minutes = Math.floor(seconds / 60);
+    const remainSecs = seconds % 60;
+    const hours = Math.floor(minutes / 60);
+    const remainMins = minutes % 60;
 
-    let years  = endDate.getFullYear() - startDate.getFullYear();
-    let months = endDate.getMonth()    - startDate.getMonth();
-    let days   = endDate.getDate()     - startDate.getDate();
+    let years = endDate.getFullYear() - startDate.getFullYear();
+    let months = endDate.getMonth() - startDate.getMonth();
+    let days = endDate.getDate() - startDate.getDate();
 
     if (days < 0) {
         const prevMonth = new Date(endDate.getFullYear(), endDate.getMonth(), 0);
@@ -514,7 +625,7 @@ function updateCard(cardId, data, animate = false) {
     const card = document.getElementById(cardId);
     if (!card) return;
     const units = card.querySelectorAll('.time-unit');
-    const keys  = ['years', 'months', 'days', 'hours', 'minutes', 'seconds', 'milliseconds'];
+    const keys = ['years', 'months', 'days', 'hours', 'minutes', 'seconds', 'milliseconds'];
 
     const prev = Array.from(units).map(u => u.querySelector('.unit-value').textContent);
 
@@ -536,18 +647,18 @@ function updateCard(cardId, data, animate = false) {
 function getZodiacSign(birthDate) {
     const m = birthDate.getMonth() + 1;
     const d = birthDate.getDate();
-    if ((m === 1  && d >= 20) || (m === 2  && d <= 18)) return { name: 'Aquarius',    icon: 'fa-water',          dates: 'Jan 20 - Feb 18' };
-    if ((m === 2  && d >= 19) || (m === 3  && d <= 20)) return { name: 'Pisces',       icon: 'fa-fish',           dates: 'Feb 19 - Mar 20' };
-    if ((m === 3  && d >= 21) || (m === 4  && d <= 19)) return { name: 'Aries',        icon: 'fa-ram',            dates: 'Mar 21 - Apr 19' };
-    if ((m === 4  && d >= 20) || (m === 5  && d <= 20)) return { name: 'Taurus',       icon: 'fa-bull',           dates: 'Apr 20 - May 20' };
-    if ((m === 5  && d >= 21) || (m === 6  && d <= 20)) return { name: 'Gemini',       icon: 'fa-users',          dates: 'May 21 - Jun 20' };
-    if ((m === 6  && d >= 21) || (m === 7  && d <= 22)) return { name: 'Cancer',       icon: 'fa-crab',           dates: 'Jun 21 - Jul 22' };
-    if ((m === 7  && d >= 23) || (m === 8  && d <= 22)) return { name: 'Leo',          icon: 'fa-crown',          dates: 'Jul 23 - Aug 22' };
-    if ((m === 8  && d >= 23) || (m === 9  && d <= 22)) return { name: 'Virgo',        icon: 'fa-wheat-alt',      dates: 'Aug 23 - Sep 22' };
-    if ((m === 9  && d >= 23) || (m === 10 && d <= 22)) return { name: 'Libra',        icon: 'fa-scale-balanced', dates: 'Sep 23 - Oct 22' };
-    if ((m === 10 && d >= 23) || (m === 11 && d <= 21)) return { name: 'Scorpio',      icon: 'fa-scorpion',       dates: 'Oct 23 - Nov 21' };
-    if ((m === 11 && d >= 22) || (m === 12 && d <= 21)) return { name: 'Sagittarius',  icon: 'fa-bow-arrow',      dates: 'Nov 22 - Dec 21' };
-    if ((m === 12 && d >= 22) || (m === 1  && d <= 19)) return { name: 'Capricorn',    icon: 'fa-mountain',       dates: 'Dec 22 - Jan 19' };
+    if ((m === 1 && d >= 20) || (m === 2 && d <= 18)) return { name: 'Aquarius', icon: 'fa-water', dates: 'Jan 20 - Feb 18' };
+    if ((m === 2 && d >= 19) || (m === 3 && d <= 20)) return { name: 'Pisces', icon: 'fa-fish', dates: 'Feb 19 - Mar 20' };
+    if ((m === 3 && d >= 21) || (m === 4 && d <= 19)) return { name: 'Aries', icon: 'fa-ram', dates: 'Mar 21 - Apr 19' };
+    if ((m === 4 && d >= 20) || (m === 5 && d <= 20)) return { name: 'Taurus', icon: 'fa-bull', dates: 'Apr 20 - May 20' };
+    if ((m === 5 && d >= 21) || (m === 6 && d <= 20)) return { name: 'Gemini', icon: 'fa-users', dates: 'May 21 - Jun 20' };
+    if ((m === 6 && d >= 21) || (m === 7 && d <= 22)) return { name: 'Cancer', icon: 'fa-crab', dates: 'Jun 21 - Jul 22' };
+    if ((m === 7 && d >= 23) || (m === 8 && d <= 22)) return { name: 'Leo', icon: 'fa-crown', dates: 'Jul 23 - Aug 22' };
+    if ((m === 8 && d >= 23) || (m === 9 && d <= 22)) return { name: 'Virgo', icon: 'fa-wheat-alt', dates: 'Aug 23 - Sep 22' };
+    if ((m === 9 && d >= 23) || (m === 10 && d <= 22)) return { name: 'Libra', icon: 'fa-scale-balanced', dates: 'Sep 23 - Oct 22' };
+    if ((m === 10 && d >= 23) || (m === 11 && d <= 21)) return { name: 'Scorpio', icon: 'fa-scorpion', dates: 'Oct 23 - Nov 21' };
+    if ((m === 11 && d >= 22) || (m === 12 && d <= 21)) return { name: 'Sagittarius', icon: 'fa-bow-arrow', dates: 'Nov 22 - Dec 21' };
+    if ((m === 12 && d >= 22) || (m === 1 && d <= 19)) return { name: 'Capricorn', icon: 'fa-mountain', dates: 'Dec 22 - Jan 19' };
     return { name: 'Unknown', icon: 'fa-question', dates: '' };
 }
 
@@ -555,7 +666,7 @@ function updateZodiacDisplay(zodiac) {
     const display = document.getElementById('zodiac-sign');
     if (!display) return;
     display.querySelector('.zodiac-icon').innerHTML = `<i class="fas ${zodiac.icon}"></i>`;
-    display.querySelector('.zodiac-name').textContent  = zodiac.name;
+    display.querySelector('.zodiac-name').textContent = zodiac.name;
     display.querySelector('.zodiac-dates').textContent = zodiac.dates;
 }
 
@@ -573,8 +684,8 @@ function displayFunFact(birthDate) {
         'People born on this day often become successful entrepreneurs!'
     ];
 
-    const monthNames = ['January','February','March','April','May','June',
-                        'July','August','September','October','November','December'];
+    const monthNames = ['January', 'February', 'March', 'April', 'May', 'June',
+        'July', 'August', 'September', 'October', 'November', 'December'];
     const fact = `Did you know? ${funFacts[Math.floor(Math.random() * funFacts.length)]} Specifically for ${monthNames[birthDate.getMonth()]} birthdays!`;
 
     const el = document.getElementById('fun-fact');
@@ -592,9 +703,9 @@ function setupDateScrolling() {
         adjustDate(Math.sign(e.deltaY), e);
     });
 
-    const up   = document.getElementById('scrollUp');
+    const up = document.getElementById('scrollUp');
     const down = document.getElementById('scrollDown');
-    if (up)   up.addEventListener('click',   e => adjustDate(-1, e));
+    if (up) up.addEventListener('click', e => adjustDate(-1, e));
     if (down) down.addEventListener('click', e => adjustDate(1, e));
 }
 
@@ -604,12 +715,12 @@ function adjustDate(direction, event) {
 
     let date = new Date(dobInput.value || defaultDate);
 
-    if (event && event.shiftKey)     date.setMonth(date.getMonth()         - direction);
-    else if (event && event.ctrlKey) date.setFullYear(date.getFullYear()   - direction);
-    else                              date.setDate(date.getDate()           - direction);
+    if (event && event.shiftKey) date.setMonth(date.getMonth() - direction);
+    else if (event && event.ctrlKey) date.setFullYear(date.getFullYear() - direction);
+    else date.setDate(date.getDate() - direction);
 
     const pad = n => String(n).padStart(2, '0');
-    dobInput.value = `${date.getFullYear()}-${pad(date.getMonth()+1)}-${pad(date.getDate())}T${pad(date.getHours())}:${pad(date.getMinutes())}`;
+    dobInput.value = `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}T${pad(date.getHours())}:${pad(date.getMinutes())}`;
 
     calculateAge();
 }
@@ -620,7 +731,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
     /* Portfolio: menu toggle */
     const menuIcon = document.querySelector('#menu-icon');
-    const navbar   = document.querySelector('.navbar');
+    const navbar = document.querySelector('.navbar');
 
     if (menuIcon && navbar) {
         menuIcon.onclick = () => {
@@ -638,11 +749,11 @@ document.addEventListener('DOMContentLoaded', function () {
         const typedTarget = document.querySelector('.typed-text');
         if (typedTarget && typeof Typed !== 'undefined') {
             new Typed('.typed-text', {
-                strings:   ['Mechanical Engineer.', 'Website Developer.', 'Designer.', 'Freelancer.', 'Coder.'],
-                typeSpeed:  80,
-                backSpeed:  70,
+                strings: ['Mechanical Engineer.', 'Website Developer.', 'Designer.', 'Freelancer.', 'Coder.'],
+                typeSpeed: 80,
+                backSpeed: 70,
                 backDelay: 1200,
-                loop:      true,
+                loop: true,
             });
         } else if (typedTarget) {
             // Typed.js not yet loaded – retry after a short delay
@@ -658,11 +769,12 @@ document.addEventListener('DOMContentLoaded', function () {
         adminAccessBtn.style.display = 'none';
 
         // Expose dashboard globals
-        window.toggleDashboard   = toggleDashboard;
-        window.showAdminAccess   = showAdminAccess;
+        window.toggleDashboard = toggleDashboard;
+        window.showAdminAccess = showAdminAccess;
         window.exportVisitorData = exportVisitorData;
+        window.refreshDashboard = refreshDashboard;
 
-        new VisitorTracker();
+        window._trackerInstance = new VisitorTracker();
     }
 
     // -------------------------------------------------------
@@ -676,7 +788,7 @@ document.addEventListener('DOMContentLoaded', function () {
         updateThemeIcon(themeBtn, savedTheme);
         themeBtn.addEventListener('click', () => {
             const current = document.documentElement.getAttribute('data-theme');
-            const next    = current === 'dark' ? 'light' : 'dark';
+            const next = current === 'dark' ? 'light' : 'dark';
             document.documentElement.setAttribute('data-theme', next);
             localStorage.setItem('theme', next);
             updateThemeIcon(themeBtn, next);
@@ -684,8 +796,8 @@ document.addEventListener('DOMContentLoaded', function () {
     }
 
     function updateThemeIcon(btn, theme) {
-        btn.innerHTML    = theme === 'dark' ? '☀️' : '🌙';
-        btn.title        = theme === 'dark' ? 'Switch to Light Mode' : 'Switch to Dark Mode';
+        btn.innerHTML = theme === 'dark' ? '☀️' : '🌙';
+        btn.title = theme === 'dark' ? 'Switch to Light Mode' : 'Switch to Dark Mode';
         btn.setAttribute('aria-label', btn.title);
     }
 
@@ -731,26 +843,26 @@ document.addEventListener('DOMContentLoaded', function () {
     if (contactForm) {
         contactForm.addEventListener('submit', async function (e) {
             e.preventDefault();
-            const submitBtn  = contactForm.querySelector('.submit-contact-btn');
-            const feedback   = document.getElementById('formFeedback');
-            const formData   = new FormData(contactForm);
-            const jsonData   = Object.fromEntries(formData.entries());
+            const submitBtn = contactForm.querySelector('.submit-contact-btn');
+            const feedback = document.getElementById('formFeedback');
+            const formData = new FormData(contactForm);
+            const jsonData = Object.fromEntries(formData.entries());
 
             if (submitBtn) { submitBtn.disabled = true; submitBtn.value = 'Sending…'; }
-            if (feedback)  { feedback.className = 'form-feedback'; feedback.textContent = ''; }
+            if (feedback) { feedback.className = 'form-feedback'; feedback.textContent = ''; }
 
             try {
-                const res  = await fetch('https://api.web3forms.com/submit', {
-                    method:  'POST',
+                const res = await fetch('https://api.web3forms.com/submit', {
+                    method: 'POST',
                     headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
-                    body:    JSON.stringify(jsonData)
+                    body: JSON.stringify(jsonData)
                 });
                 const data = await res.json();
 
                 if (data.success) {
                     if (feedback) {
                         feedback.textContent = '✅ Message sent! Samuel will get back to you soon.';
-                        feedback.className   = 'form-feedback success';
+                        feedback.className = 'form-feedback success';
                     }
                     contactForm.reset();
                 } else {
@@ -759,7 +871,7 @@ document.addEventListener('DOMContentLoaded', function () {
             } catch (err) {
                 if (feedback) {
                     feedback.textContent = '❌ Something went wrong. Please try again or email directly.';
-                    feedback.className   = 'form-feedback error';
+                    feedback.className = 'form-feedback error';
                 }
             } finally {
                 if (submitBtn) { submitBtn.disabled = false; submitBtn.value = 'Send Message'; }

@@ -26,7 +26,7 @@
         <div class="popup-content">
             <h3><i class="fas fa-bell"></i> Visitor Notification</h3>
             <p>Notify Samuel about your visit? (Optional)</p>
-            
+
             <form id="visitorForm">
                 <div class="form-group">
                     <input type="text" name="visitor_name" placeholder="Your Name (Optional)">
@@ -48,7 +48,7 @@
                     <button type="button" class="skip-btn">Skip</button>
                 </div>
             </form>
-            
+
             <div class="visitor-count">
                 <i class="fas fa-users"></i>
                 <span id="totalVisits">0</span> visits today
@@ -63,6 +63,17 @@
             <button class="close-dashboard" onclick="toggleDashboard()">×</button>
         </div>
         <div class="dashboard-content">
+
+            <!-- Sheet connection status -->
+            <div
+                style="display:flex; align-items:center; justify-content:space-between; margin-bottom:1.5rem; flex-wrap:wrap; gap:1rem;">
+                <span id="sheetStatus" style="font-size:1.3rem;">⚪ Sheet not configured (localStorage only)</span>
+                <button onclick="refreshDashboard()"
+                    style="background:var(--main-color);color:#081b29;border:none;padding:0.6rem 1.4rem;border-radius:2rem;font-size:1.3rem;font-weight:600;cursor:pointer;">
+                    ↻ Refresh
+                </button>
+            </div>
+
             <div class="stats-grid">
                 <div class="stat-card">
                     <h4>Total Visits</h4>
@@ -81,7 +92,7 @@
                     <div class="stat-number" id="detailedVisits">0</div>
                 </div>
             </div>
-            
+
             <div class="visitor-list">
                 <h4>Recent Visitors</h4>
                 <div class="list-header">
@@ -94,9 +105,9 @@
                     <div class="empty-state">No visitor data yet</div>
                 </div>
             </div>
-            
+
             <button class="export-btn" onclick="exportVisitorData()">
-                <i class="fas fa-download"></i> Export Data
+                <i class="fas fa-download"></i> Export Data (CSV)
             </button>
         </div>
     </div>
@@ -117,12 +128,9 @@
             <a href="#services">Services</a>
             <a href="#portfolio">Portfolio</a>
             <a href="#contact">Contact</a>
-            <a href="#" onclick="toggleDashboard()" class="visitor-stats-btn">
-                <i class="fas fa-chart-bar"></i> Stats
-            </a>
         </nav>
     </header>
-    
+
     <!-- Rest of your existing content remains the same -->
     <section class="home" id="home">
         <div class="home-img">
@@ -161,7 +169,7 @@
             </div> -->
         </div>
     </section>
-    
+
     <!-- About, Services, Portfolio, Contact sections remain the same -->
     <!-- About Section -->
     <section class="about" id="about">
@@ -223,7 +231,8 @@
                     <h2>What'sApp Bot</h2>
                     <p>A sleek JavaScript bot built using the Baileys library, designed for seamless WhatsApp
                         automation.</p>
-                    <p><a href="https://github.com/Samuel-Muli/Nation-Protector" class="btn-box" target="_blank">View on GitHub</a></p>
+                    <p><a href="https://github.com/Samuel-Muli/Nation-Protector" class="btn-box" target="_blank">View on
+                            GitHub</a></p>
                 </div>
                 <div class="portfolio-item">
                     <img src="/img/img3.png" alt="Portfolio Website" loading="lazy">
@@ -231,23 +240,28 @@
                     <h2>Portfolio Website</h2>
                     <p>A responsive portfolio website built using HTML, CSS, and JavaScript, designed to showcase my
                         skills and projects.</p>
-                    <p><a href="https://github.com/Samuel-Muli/My_Website" class="btn-box" target="_blank">View on GitHub</a></p>
+                    <p><a href="https://github.com/Samuel-Muli/My_Website" class="btn-box" target="_blank">View on
+                            GitHub</a></p>
                 </div>
                 <div class="portfolio-item">
                     <img src="/img/img4.png" alt="Python Script" loading="lazy">
 
                     <h2>Python Script</h2>
-                    <p>A simple python script that acts like a task manager. Though simplified only disk usage, cpu usage and network usage are monitored.</p>
+                    <p>A simple python script that acts like a task manager. Though simplified only disk usage, cpu
+                        usage and network usage are monitored.</p>
                     </p>
-                    <p><a href="https://github.com/Samuel-Muli/Task-Manager" class="btn-box" target="_blank">View on GitHub</a></p>
+                    <p><a href="https://github.com/Samuel-Muli/Task-Manager" class="btn-box" target="_blank">View on
+                            GitHub</a></p>
                 </div>
                 <div class="portfolio-item">
                     <img src="/img/img2.png" alt="Company Website" loading="lazy">
 
                     <h2>Company Website</h2>
-                    <p>Created Lekisa Trading Company website using react js. The site can be accessed by clicking the following link
+                    <p>Created Lekisa Trading Company website using react js. The site can be accessed by clicking the
+                        following link
                     </p>
-                    <p><a href="https://lekisatradinglimited.onrender.com/" class="btn-box" target="_blank">Visit Site</a></p>
+                    <p><a href="https://lekisatradinglimited.onrender.com/" class="btn-box" target="_blank">Visit
+                            Site</a></p>
                 </div>
                 <div class="portfolio-item">
                     <img src="/img/img3.png" alt="Age Calculator" loading="lazy">
@@ -271,21 +285,25 @@
                     <h2>MP3 duplicate</h2>
                     <p>A Python script that scans your music library for duplicate files based on metadata and file
                         size, helping you free up storage space and organize your collection.</p>
-                    <p><a href="https://github.com/Samuel-Muli/MP3-duplicate-sorter" class="btn-box" target="_blank">View on GitHub</a></p>
+                    <p><a href="https://github.com/Samuel-Muli/MP3-duplicate-sorter" class="btn-box"
+                            target="_blank">View on GitHub</a></p>
                 </div>
                 <div class="portfolio-item">
                     <img src="/img/img3.png" alt="Birthday App" loading="lazy">
 
                     <h2>Birthday App</h2>
-                    <p>A desktop and android application that I customized to do count down to birthday, current age and also a suprise special play on the day.</p>
-                    <p><a href="https://github.com/Samuel-Muli/Birthday" class="btn-box" target="_blank">View on GitHub</a></p>
+                    <p>A desktop and android application that I customized to do count down to birthday, current age and
+                        also a suprise special play on the day.</p>
+                    <p><a href="https://github.com/Samuel-Muli/Birthday" class="btn-box" target="_blank">View on
+                            GitHub</a></p>
                 </div>
                 <div class="portfolio-item">
                     <img src="/img/img2.png" alt="GitHub Projects" loading="lazy">
 
                     <h2>Git Hub</h2>
                     <p>I have different projects on GitHub that you can explore.</p>
-                    <p><a href="https://github.com/Samuel-Muli" class="btn-box" target="_blank">Check Out My Projects</a></p>
+                    <p><a href="https://github.com/Samuel-Muli" class="btn-box" target="_blank">Check Out My
+                            Projects</a></p>
                 </div>
             </div>
 

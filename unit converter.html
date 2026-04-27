@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -9,7 +10,7 @@
   <link rel="icon" href="img/image.png" type="image/png">
   <!-- Apply saved theme before render to avoid flash -->
   <script>
-    (function() {
+    (function () {
       var t = localStorage.getItem('theme') || 'light';
       document.documentElement.setAttribute('data-theme', t);
     })();
@@ -57,7 +58,7 @@
       background: var(--uc-card);
       padding: 20px;
       border-radius: 12px;
-      box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
       transition: background 0.3s ease;
     }
 
@@ -101,7 +102,8 @@
       justify-content: center;
     }
 
-    input, select {
+    input,
+    select {
       padding: 10px;
       border-radius: 6px;
       border: 1px solid var(--uc-border);
@@ -151,7 +153,7 @@
       font-size: 18px;
       font-weight: bold;
       color: var(--uc-result-color);
-      box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
       text-align: center;
       transition: background 0.3s ease, color 0.3s ease, border-color 0.3s ease;
     }
@@ -232,7 +234,7 @@
       display: flex;
       align-items: center;
       justify-content: center;
-      box-shadow: 0 0 12px rgba(0,123,255,0.5);
+      box-shadow: 0 0 12px rgba(0, 123, 255, 0.5);
       transition: transform 0.3s, box-shadow 0.3s;
     }
 
@@ -243,7 +245,8 @@
     /* Cookie banner */
     .cookie-banner {
       position: fixed;
-      bottom: 0; left: 0;
+      bottom: 0;
+      left: 0;
       width: 100%;
       background: var(--uc-card);
       border-top: 3px solid #007bff;
@@ -254,14 +257,18 @@
       flex-wrap: wrap;
       gap: 1rem;
       z-index: 99999;
-      box-shadow: 0 -4px 15px rgba(0,0,0,0.15);
+      box-shadow: 0 -4px 15px rgba(0, 0, 0, 0.15);
       font-size: 14px;
       color: var(--uc-text);
     }
 
-    .cookie-buttons { display: flex; gap: 0.8rem; }
+    .cookie-buttons {
+      display: flex;
+      gap: 0.8rem;
+    }
 
-    .cookie-accept, .cookie-reject {
+    .cookie-accept,
+    .cookie-reject {
       padding: 6px 16px;
       border: none;
       border-radius: 20px;
@@ -270,10 +277,19 @@
       cursor: pointer;
     }
 
-    .cookie-accept { background: #007bff; color: #fff; }
-    .cookie-reject { background: transparent; border: 2px solid #007bff; color: #007bff; }
+    .cookie-accept {
+      background: #007bff;
+      color: #fff;
+    }
+
+    .cookie-reject {
+      background: transparent;
+      border: 2px solid #007bff;
+      color: #007bff;
+    }
   </style>
 </head>
+
 <body>
   <div class="app-container">
     <h1>⚡ Smart Unit Converter</h1>
@@ -294,12 +310,12 @@
       <select id="unit-from"></select>
       <button id="swap-btn">⇆</button>
       <select id="unit-to"></select>
-      
+
       <!-- Convert button on new line -->
       <div class="convert-btn-wrapper">
         <button class="convert-btn" id="convert-btn">Convert</button>
       </div>
-      
+
       <!-- Results styled as card -->
       <div class="result" id="result">Result will appear here</div>
     </div>
@@ -312,7 +328,8 @@
 
     <!-- Shortcuts help – now toggled by button OR pressing ? -->
     <div style="text-align:center; margin-top:15px;">
-      <button id="shortcuts-toggle" style="background:#fff8e1; border:2px solid #ff9800; color:#e65100; padding:8px 16px; border-radius:6px; cursor:pointer; font-weight:bold; font-size:14px;">
+      <button id="shortcuts-toggle"
+        style="background:#fff8e1; border:2px solid #ff9800; color:#e65100; padding:8px 16px; border-radius:6px; cursor:pointer; font-weight:bold; font-size:14px;">
         ⌨️ Keyboard Shortcuts <span style="opacity:0.6;">(or press ?)</span>
       </button>
     </div>
@@ -336,36 +353,36 @@
   <script>
     const conversionData = {
       length: {
-        units: ["meters","kilometers","centimeters","millimeters","miles","yards","feet","inches"],
+        units: ["meters", "kilometers", "centimeters", "millimeters", "miles", "yards", "feet", "inches"],
         factors: {
           meters: 1, kilometers: 0.001, centimeters: 100, millimeters: 1000,
           miles: 0.000621371, yards: 1.09361, feet: 3.28084, inches: 39.3701
         }
       },
       weight: {
-        units: ["kilograms","grams","milligrams","pounds","ounces","tons"],
+        units: ["kilograms", "grams", "milligrams", "pounds", "ounces", "tons"],
         factors: {
           kilograms: 1, grams: 1000, milligrams: 1000000,
           pounds: 2.20462, ounces: 35.274, tons: 0.00110231
         }
       },
-      temperature: { units: ["celsius","fahrenheit","kelvin"] },
+      temperature: { units: ["celsius", "fahrenheit", "kelvin"] },
       area: {
-        units: ["square meters","square kilometers","square miles","square feet","acres","hectares"],
+        units: ["square meters", "square kilometers", "square miles", "square feet", "acres", "hectares"],
         factors: {
           "square meters": 1, "square kilometers": 0.000001, "square miles": 0.000000386102,
           "square feet": 10.7639, acres: 0.000247105, hectares: 0.0001
         }
       },
       volume: {
-        units: ["liters","milliliters","cubic meters","cubic feet","gallons","pints"],
+        units: ["liters", "milliliters", "cubic meters", "cubic feet", "gallons", "pints"],
         factors: {
           liters: 1, milliliters: 1000, "cubic meters": 0.001,
           "cubic feet": 0.0353147, gallons: 0.264172, pints: 2.11338
         }
       },
       time: {
-        units: ["seconds","minutes","hours","days","weeks","months","years"],
+        units: ["seconds", "minutes", "hours", "days", "weeks", "months", "years"],
         factors: {
           seconds: 1, minutes: 60, hours: 3600, days: 86400,
           weeks: 604800, months: 2628000, years: 31536000
@@ -443,7 +460,7 @@
         const baseValue = value * conversionData[currentCategory].factors[fromUnit];
         result = baseValue / conversionData[currentCategory].factors[toUnit];
       }
-      const formattedResult = new Intl.NumberFormat('en-US',{maximumFractionDigits:6}).format(result);
+      const formattedResult = new Intl.NumberFormat('en-US', { maximumFractionDigits: 6 }).format(result);
       resultDiv.innerHTML = `${value} ${fromUnit} = <strong>${formattedResult} ${toUnit}</strong>`;
       addToHistory(value, fromUnit, formattedResult, toUnit);
     }
@@ -452,12 +469,12 @@
       let celsius;
       switch (fromUnit) {
         case 'celsius': celsius = value; break;
-        case 'fahrenheit': celsius = (value - 32) * 5/9; break;
+        case 'fahrenheit': celsius = (value - 32) * 5 / 9; break;
         case 'kelvin': celsius = value - 273.15; break;
       }
       switch (toUnit) {
         case 'celsius': return celsius;
-        case 'fahrenheit': return (celsius * 9/5) + 32;
+        case 'fahrenheit': return (celsius * 9 / 5) + 32;
         case 'kelvin': return celsius + 273.15;
       }
     }
@@ -485,7 +502,7 @@
         historyList.innerHTML = '<li>No conversion history yet</li>';
         return;
       }
-      conversionHistory.forEach((c,index) => {
+      conversionHistory.forEach((c, index) => {
         const li = document.createElement('li');
         const text = document.createElement('span');
         text.textContent = `${c.value} ${c.fromUnit} → ${c.result} ${c.toUnit}`;
@@ -495,7 +512,7 @@
         delBtn.style.background = 'transparent';
         delBtn.style.cursor = 'pointer';
         delBtn.onclick = () => {
-          conversionHistory.splice(index,1);
+          conversionHistory.splice(index, 1);
           localStorage.setItem('conversionHistory', JSON.stringify(conversionHistory));
           updateHistoryDisplay();
         };
@@ -591,4 +608,5 @@
   </div>
 
 </body>
+
 </html>
