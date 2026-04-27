@@ -116,6 +116,8 @@ Save the file and upload it to your hosting.
 
 > If no row appears, check Step 7 — Troubleshooting.
 
+Note: This steps makes a new sheet in the spreadsheet. So be shore to check the bottom of page and navigate to the new sheet which will likely be namened as Samuel Muli — Visitor Tracker or whtaever you named your spreadsheet, next to sheet 1.
+
 ---
 
 ## What Gets Logged
