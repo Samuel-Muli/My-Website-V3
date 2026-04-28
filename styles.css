@@ -28,6 +28,12 @@
     --header-bg: var(--main-color);
     --card-shadow: rgba(0, 0, 0, 0.1);
     --transition-speed: 0.3s;
+    /* Age calculator header gradient */
+    --age-header-start: #2c3e50;
+    --age-header-end: #4a6491;
+    /* Age calculator text colours */
+    --age-label-color: #2c3e50;
+    --age-zodiac-name: #2c3e50;
 }
 
 /* Dark Mode */
@@ -37,6 +43,11 @@
     --text-color: #c9d1d9;
     --main-color: #0ef;
     --card-shadow: rgba(0, 0, 0, 0.4);
+    /* Age calculator header — softer in dark mode */
+    --age-header-start: #1a1f35;
+    --age-header-end: #2a3a5c;
+    --age-label-color: #c9d1d9;
+    --age-zodiac-name: #c9d1d9;
 }
 
 html {
@@ -1165,6 +1176,127 @@ section,
     box-shadow: 0 0 25px var(--main-color);
 }
 
+/* Theme toggle embedded in navbar */
+.theme-toggle-nav {
+    background: transparent;
+    border: 2px solid rgba(255, 255, 255, 0.7);
+    border-radius: 50%;
+    width: 36px;
+    height: 36px;
+    font-size: 1.4rem;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    margin-left: 20px;
+    transition: transform 0.3s, border-color 0.3s;
+    vertical-align: middle;
+    line-height: 1;
+    padding: 0;
+}
+
+.theme-toggle-nav:hover {
+    transform: scale(1.15);
+    border-color: #fff;
+}
+
+/* Share my age button */
+.share-age-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    background: linear-gradient(to right, #9b59b6, #8e44ad);
+    color: white;
+    border: none;
+    padding: 10px 22px;
+    border-radius: 50px;
+    font-size: 1rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s;
+    margin-top: 15px;
+    box-shadow: 0 4px 12px rgba(155, 89, 182, 0.4);
+}
+
+.share-age-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 18px rgba(155, 89, 182, 0.6);
+}
+
+.share-age-btn.copied {
+    background: linear-gradient(to right, #2ecc71, #27ae60);
+    box-shadow: 0 4px 12px rgba(46, 204, 113, 0.4);
+}
+
+/* Age-calc header theme toggle wrapper */
+.age-header-top {
+    display: flex;
+    justify-content: flex-end;
+    padding: 10px 15px 0;
+}
+
+.age-header-theme-btn {
+    background: rgba(255,255,255,0.2);
+    border: 1px solid rgba(255,255,255,0.5);
+    border-radius: 50%;
+    width: 36px;
+    height: 36px;
+    font-size: 1.3rem;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background 0.3s, transform 0.3s;
+}
+
+.age-header-theme-btn:hover {
+    background: rgba(255,255,255,0.35);
+    transform: scale(1.1);
+}
+
+/* Contact form spinner */
+.submit-contact-btn {
+    position: relative;
+}
+
+.btn-spinner {
+    display: none;
+    width: 16px;
+    height: 16px;
+    border: 2px solid rgba(255,255,255,0.4);
+    border-top-color: #fff;
+    border-radius: 50%;
+    animation: spin 0.7s linear infinite;
+    vertical-align: middle;
+    margin-right: 6px;
+}
+
+@keyframes spin {
+    to { transform: rotate(360deg); }
+}
+
+.submit-contact-btn.sending .btn-spinner {
+    display: inline-block;
+}
+
+/* Popup countdown bar */
+.popup-timer-bar {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    height: 3px;
+    background: var(--main-color);
+    width: 100%;
+    border-radius: 0 0 2rem 2rem;
+    transform-origin: left;
+    animation: timerShrink 10s linear forwards;
+}
+
+@keyframes timerShrink {
+    from { transform: scaleX(1); }
+    to   { transform: scaleX(0); }
+}
+
 /* Cookie Consent Banner */
 .cookie-banner {
     position: fixed;
@@ -1307,8 +1439,10 @@ section,
 }
 
 
-Scoped under .age-calc-page where possible;
-global resets intentionally omitted (already set above). ------------------------------------------------------- */
+/* -------------------------------------------------------
+   SECTION 2 – AGE CALCULATOR PAGE  (originally styless.css)
+   Scoped under body.age-calc-body / .age-calc-page where possible.
+   ------------------------------------------------------- */
 
 /* Body override for the age calculator standalone page.
    Wrap <body> content in <div class="age-calc-page"> when
@@ -1353,7 +1487,7 @@ body.age-calc-body .container {
 
 /* Header */
 body.age-calc-body header {
-    background: linear-gradient(to right, #2c3e50, #4a6491);
+    background: linear-gradient(to right, var(--age-header-start), var(--age-header-end));
     color: white;
     text-align: center;
     padding: 25px 20px;
@@ -1559,7 +1693,7 @@ body.age-calc-body label {
 
 .card-header h3 {
     font-size: 1.4rem;
-    color: #2c3e50;
+    color: var(--age-label-color);
     display: flex;
     align-items: center;
     gap: 10px;
@@ -1582,7 +1716,7 @@ body.age-calc-body label {
 
 .unit-label {
     font-weight: 600;
-    color: #2c3e50;
+    color: var(--age-label-color);
     display: flex;
     align-items: center;
     gap: 10px;
@@ -1672,7 +1806,7 @@ body.age-calc-body .footer {
 .zodiac-name {
     font-size: 1.8rem;
     font-weight: 700;
-    color: #2c3e50;
+    color: var(--age-zodiac-name);
 }
 
 .zodiac-dates {

@@ -96,46 +96,49 @@ class VisitorTracker {
             });
     }
 
-    // ── Google Sheets: log a visit row ──────────────────────────────
-    logToSheet(visitData) {
-        if (!SHEET_CONFIG.enabled()) return; // sheet not configured yet
+    // ── Google Sheets: log a visit row (with exponential backoff retry) ─
+    logToSheet(visitData, attempt = 1) {
+        if (!SHEET_CONFIG.enabled()) return;
 
         const payload = {
-            timestamp: visitData.timestamp,
-            date: visitData.date,
-            time: visitData.time,
-            name: visitData.visitor_name || visitData.name || '',
-            email: visitData.visitor_email || visitData.email || '',
-            purpose: visitData.visitor_purpose || visitData.purpose || '',
-            ip: visitData.ip || '',
-            location: visitData.location || '',
-            isMobile: visitData.isMobile,
+            timestamp:        visitData.timestamp,
+            date:             visitData.date,
+            time:             visitData.time,
+            name:             visitData.visitor_name    || visitData.name    || '',
+            email:            visitData.visitor_email   || visitData.email   || '',
+            purpose:          visitData.visitor_purpose || visitData.purpose || '',
+            ip:               visitData.ip              || '',
+            location:         visitData.location        || '',
+            isMobile:         visitData.isMobile,
             screenResolution: visitData.screenResolution || '',
-            userAgent: visitData.userAgent || '',
-            page: visitData.page || '',
-            referrer: visitData.referrer || '',
-            notify_me: visitData.notify_me || false,
-            botcheck: ''   // honeypot — always empty from legit client
+            userAgent:        visitData.userAgent        || '',
+            page:             visitData.page             || '',
+            referrer:         visitData.referrer         || '',
+            notify_me:        visitData.notify_me        || false,
+            botcheck:         ''
         };
 
-        // IMPORTANT: Must use 'text/plain' not 'application/json'.
-        // Apps Script cannot handle the CORS OPTIONS preflight that 'application/json' triggers,
-        // so the POST would silently fail. text/plain skips the preflight entirely.
         fetch(SHEET_CONFIG.sheetScriptUrl, {
-            method: 'POST',
+            method:  'POST',
             headers: { 'Content-Type': 'text/plain' },
-            body: JSON.stringify(payload)
+            body:    JSON.stringify(payload)
         })
-            .then(r => r.json())
-            .then(res => {
-                if (res.success && res.total !== undefined) {
-                    // Update cached totals from the authoritative sheet count
-                    if (!this.sheetTotals) this.sheetTotals = {};
-                    this.sheetTotals.total = res.total;
-                    this.updateDisplay();
-                }
-            })
-            .catch(() => { /* sheet logging is best-effort — localStorage is the fallback */ });
+        .then(r => r.json())
+        .then(res => {
+            if (res.success && res.total !== undefined) {
+                if (!this.sheetTotals) this.sheetTotals = {};
+                this.sheetTotals.total = res.total;
+                this._lastSyncTime = new Date();
+                this.updateDisplay();
+            }
+        })
+        .catch(() => {
+            // Exponential backoff: retry up to 4 times (2s, 4s, 8s, 16s)
+            if (attempt <= 4) {
+                const delay = Math.pow(2, attempt) * 1000;
+                setTimeout(() => this.logToSheet(visitData, attempt + 1), delay);
+            }
+        });
     }
 
     // ── Google Sheets: fetch current total/today counts (GET) ───────
@@ -146,9 +149,10 @@ class VisitorTracker {
             .then(r => r.json())
             .then(data => {
                 this.sheetTotals = { total: data.total || 0, today: data.today || 0 };
+                this._lastSyncTime = new Date();
             })
             .catch(() => {
-                this.sheetTotals = null; // fall back to localStorage counts
+                this.sheetTotals = null;
             });
     }
 
@@ -213,6 +217,21 @@ class VisitorTracker {
             }
         }
 
+        // Last sync timestamp
+        const lastSyncEl = document.getElementById('lastSyncInfo');
+        if (lastSyncEl) {
+            if (this._lastSyncTime) {
+                const diffMs  = Date.now() - this._lastSyncTime.getTime();
+                const diffMin = Math.floor(diffMs / 60000);
+                const diffSec = Math.floor((diffMs % 60000) / 1000);
+                const ago = diffMin > 0 ? `${diffMin} min${diffMin > 1 ? 's' : ''} ago`
+                                        : `${diffSec} second${diffSec !== 1 ? 's' : ''} ago`;
+                lastSyncEl.textContent = `Last sync: ${ago} (${this._lastSyncTime.toLocaleTimeString()})`;
+            } else {
+                lastSyncEl.textContent = SHEET_CONFIG.enabled() ? 'Syncing…' : 'Sheet not configured';
+            }
+        }
+
         this.updateVisitorList();
     }
 
@@ -266,11 +285,21 @@ class VisitorTracker {
     showPopup() {
         setTimeout(() => {
             const popup = document.getElementById('visitorPopup');
-            if (popup) popup.classList.add('active');
+            if (!popup) return;
+            popup.classList.add('active');
+
+            // Auto-dismiss after 10 seconds
+            this._popupTimer = setTimeout(() => this.hidePopup(), 10000);
+
+            // Dismiss on click outside the popup content box
+            popup.addEventListener('click', (e) => {
+                if (e.target === popup) this.hidePopup();
+            }, { once: true });
         }, 2000);
     }
 
     hidePopup() {
+        clearTimeout(this._popupTimer);
         const popup = document.getElementById('visitorPopup');
         if (popup) popup.classList.remove('active');
     }
@@ -493,7 +522,13 @@ function calculateAge() {
     const now = new Date();
 
     if (birthDate > now) {
-        alert('Birthday must be in the past');
+        // Reset to today instead of just alerting
+        const pad = n => String(n).padStart(2, '0');
+        const reset = new Date();
+        dobInput.value = `${reset.getFullYear()}-${pad(reset.getMonth()+1)}-${pad(reset.getDate())}T${pad(reset.getHours())}:${pad(reset.getMinutes())}`;
+        dobInput.style.borderColor = '#e74c3c';
+        dobInput.title = 'Date must be in the past — reset to today';
+        setTimeout(() => { dobInput.style.borderColor = ''; dobInput.title = ''; }, 2500);
         return;
     }
 
@@ -510,6 +545,10 @@ function calculateAge() {
     checkBirthday(birthDate, now);
 
     intervalId = setInterval(updateRealTime, 100);
+
+    // Show the Share button now that we have a valid result
+    const shareBtn = document.getElementById('shareAgeBtn');
+    if (shareBtn) shareBtn.style.display = 'inline-flex';
 }
 
 function checkBirthday(birthDate, now) {
@@ -552,6 +591,50 @@ function closePopup() {
     if (popup) popup.classList.remove('active');
     // #8 FIX: clean up all confetti elements immediately on close
     document.querySelectorAll('.confetti').forEach(el => el.remove());
+}
+
+function shareAge() {
+    if (!birthDate) return;
+    const now = new Date();
+    const age = calculateDetailedDifference(birthDate, now);
+    const zodiac = getZodiacSign(birthDate);
+    const text = `🎂 I am ${age.years} years, ${age.months} months, and ${age.days} days old! My zodiac sign is ${zodiac.name}. Calculate yours at ${window.location.href}`;
+
+    const btn = document.getElementById('shareAgeBtn');
+
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(text).then(() => {
+            if (btn) {
+                btn.innerHTML = '<i class="fas fa-check"></i> Copied!';
+                btn.classList.add('copied');
+                setTimeout(() => {
+                    btn.innerHTML = '<i class="fas fa-share-alt"></i> Share My Age';
+                    btn.classList.remove('copied');
+                }, 2500);
+            }
+        }).catch(() => fallbackCopy(text, btn));
+    } else {
+        fallbackCopy(text, btn);
+    }
+}
+
+function fallbackCopy(text, btn) {
+    const ta = document.createElement('textarea');
+    ta.value = text;
+    ta.style.position = 'fixed';
+    ta.style.opacity = '0';
+    document.body.appendChild(ta);
+    ta.select();
+    document.execCommand('copy');
+    document.body.removeChild(ta);
+    if (btn) {
+        btn.innerHTML = '<i class="fas fa-check"></i> Copied!';
+        btn.classList.add('copied');
+        setTimeout(() => {
+            btn.innerHTML = '<i class="fas fa-share-alt"></i> Share My Age';
+            btn.classList.remove('copied');
+        }, 2500);
+    }
 }
 
 function createConfetti() {
@@ -804,34 +887,11 @@ document.addEventListener('DOMContentLoaded', function () {
     // -------------------------------------------------------
     // #15: Cookie Consent Banner
     // -------------------------------------------------------
-    const cookieConsent = localStorage.getItem('cookieConsent');
-    if (!cookieConsent) {
-        const banner = document.getElementById('cookieBanner');
-        if (banner) banner.style.display = 'flex';
-    }
-
-    const acceptBtn = document.getElementById('cookieAccept');
-    const rejectBtn = document.getElementById('cookieReject');
-
-    if (acceptBtn) {
-        acceptBtn.addEventListener('click', () => {
-            localStorage.setItem('cookieConsent', 'accepted');
-            hideCookieBanner();
-        });
-    }
-    if (rejectBtn) {
-        rejectBtn.addEventListener('click', () => {
-            localStorage.setItem('cookieConsent', 'rejected');
-            hideCookieBanner();
-        });
-    }
-
     function hideCookieBanner() {
         const banner = document.getElementById('cookieBanner');
         if (banner) {
-            banner.style.animation = 'none';
-            banner.style.transform = 'translateY(100%)';
             banner.style.transition = 'transform 0.3s ease';
+            banner.style.transform  = 'translateY(100%)';
             setTimeout(() => banner.remove(), 300);
         }
     }
@@ -844,25 +904,31 @@ document.addEventListener('DOMContentLoaded', function () {
         contactForm.addEventListener('submit', async function (e) {
             e.preventDefault();
             const submitBtn = contactForm.querySelector('.submit-contact-btn');
-            const feedback = document.getElementById('formFeedback');
-            const formData = new FormData(contactForm);
-            const jsonData = Object.fromEntries(formData.entries());
+            const feedback  = document.getElementById('formFeedback');
+            const formData  = new FormData(contactForm);
+            const jsonData  = Object.fromEntries(formData.entries());
 
-            if (submitBtn) { submitBtn.disabled = true; submitBtn.value = 'Sending…'; }
+            if (submitBtn) {
+                submitBtn.disabled = true;
+                submitBtn.value    = '';
+                // Inject spinner span temporarily
+                submitBtn.insertAdjacentHTML('afterend',
+                    '<span id="contactSpinner" class="spinner" style="display:inline-block;"></span>');
+            }
             if (feedback) { feedback.className = 'form-feedback'; feedback.textContent = ''; }
 
             try {
-                const res = await fetch('https://api.web3forms.com/submit', {
-                    method: 'POST',
+                const res  = await fetch('https://api.web3forms.com/submit', {
+                    method:  'POST',
                     headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
-                    body: JSON.stringify(jsonData)
+                    body:    JSON.stringify(jsonData)
                 });
                 const data = await res.json();
 
                 if (data.success) {
                     if (feedback) {
                         feedback.textContent = '✅ Message sent! Samuel will get back to you soon.';
-                        feedback.className = 'form-feedback success';
+                        feedback.className   = 'form-feedback success';
                     }
                     contactForm.reset();
                 } else {
@@ -871,14 +937,36 @@ document.addEventListener('DOMContentLoaded', function () {
             } catch (err) {
                 if (feedback) {
                     feedback.textContent = '❌ Something went wrong. Please try again or email directly.';
-                    feedback.className = 'form-feedback error';
+                    feedback.className   = 'form-feedback error';
                 }
             } finally {
+                const spinner = document.getElementById('contactSpinner');
+                if (spinner) spinner.remove();
                 if (submitBtn) { submitBtn.disabled = false; submitBtn.value = 'Send Message'; }
             }
         });
     }
-});
+
+    // ── Cookie Banner – toggle class not inline style to avoid flash ──
+    function initCookieBanner() {
+        const banner = document.getElementById('cookieBanner');
+        if (!banner) return;
+        if (!localStorage.getItem('cookieConsent')) {
+            banner.classList.remove('hidden-init');
+            banner.style.display = 'flex';
+        }
+        document.getElementById('cookieAccept')?.addEventListener('click', () => {
+            localStorage.setItem('cookieConsent', 'accepted');
+            hideCookieBanner();
+        });
+        document.getElementById('cookieReject')?.addEventListener('click', () => {
+            localStorage.setItem('cookieConsent', 'rejected');
+            hideCookieBanner();
+        });
+    }
+    initCookieBanner();
+
+}); // end DOMContentLoaded
 
 /* ---- window.onload – age calculator default date ---- */
 

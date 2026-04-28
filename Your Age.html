@@ -44,6 +44,9 @@
         </div>
 
         <header>
+            <div style="display:flex; justify-content:flex-end; padding:0 20px 0; margin-bottom:-10px;">
+                <button id="themeToggle" class="theme-toggle-nav" title="Toggle Dark Mode" aria-label="Toggle Dark Mode" style="border-color:rgba(255,255,255,0.6); color:rgba(255,255,255,0.9);">🌙</button>
+            </div>
             <h1><i class="fas fa-calculator"></i> Advanced Age Calculator</h1>
             <p class="subtitle">Calculate your exact age and see days until next birthday with zodiac sign and fun facts
             </p>
@@ -62,6 +65,9 @@
                 <p class="scroll-info">Use buttons or mouse wheel to adjust date/time</p>
                 <button class="btn" onclick="calculateAge()">
                     <i class="fas fa-calculator"></i> Calculate Age
+                </button>
+                <button class="share-age-btn" id="shareAgeBtn" onclick="shareAge()" style="display:none;">
+                    <i class="fas fa-share-alt"></i> Share My Age
                 </button>
                 <p class="info">For best results, include your exact time of birth</p>
             </div>
@@ -180,11 +186,8 @@
         </div>
     </div>
 
-    <!-- #14: Dark Mode Toggle -->
-    <button id="themeToggle" class="theme-toggle" title="Toggle Dark Mode" aria-label="Toggle Dark Mode">🌙</button>
-
-    <!-- #15: Cookie Consent Banner -->
-    <div id="cookieBanner" class="cookie-banner" style="display:none;" role="dialog" aria-label="Cookie consent">
+    <!-- #15: Cookie Consent Banner – hidden-init class avoids inline flash -->
+    <div id="cookieBanner" class="cookie-banner hidden-init" role="dialog" aria-label="Cookie consent">
         <p>
             🍪 This site uses <strong>localStorage</strong> to remember your preferences.
             No data is shared with third parties.

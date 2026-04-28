@@ -24,8 +24,8 @@
     <!-- Visitor Notification Popup -->
     <div class="visitor-popup" id="visitorPopup">
         <div class="popup-content">
-            <h3><i class="fas fa-bell"></i> Visitor Notification</h3>
-            <p>Notify Samuel about your visit? (Optional)</p>
+            <h3><i class="fas fa-bell"></i> Welcome!</h3>
+            <p>Want to let Samuel know you stopped by? Fill in your details or just skip.</p>
 
             <form id="visitorForm">
                 <div class="form-group">
@@ -37,12 +37,8 @@
                 <div class="form-group">
                     <input type="text" name="visitor_purpose" placeholder="Purpose of Visit (Optional)">
                 </div>
-                <div class="form-group">
-                    <label>
-                        <input type="checkbox" name="notify_me" checked>
-                        Notify Samuel about my visit
-                    </label>
-                </div>
+                <!-- notify_me is always true when user submits (they chose to notify by clicking Notify Visit) -->
+                <input type="hidden" name="notify_me" value="on">
                 <div class="popup-buttons">
                     <button type="submit" class="submit-btn">Notify Visit</button>
                     <button type="button" class="skip-btn">Skip</button>
@@ -66,13 +62,14 @@
 
             <!-- Sheet connection status -->
             <div
-                style="display:flex; align-items:center; justify-content:space-between; margin-bottom:1.5rem; flex-wrap:wrap; gap:1rem;">
+                style="display:flex; align-items:center; justify-content:space-between; margin-bottom:0.5rem; flex-wrap:wrap; gap:1rem;">
                 <span id="sheetStatus" style="font-size:1.3rem;">⚪ Sheet not configured (localStorage only)</span>
                 <button onclick="refreshDashboard()"
                     style="background:var(--main-color);color:#081b29;border:none;padding:0.6rem 1.4rem;border-radius:2rem;font-size:1.3rem;font-weight:600;cursor:pointer;">
                     ↻ Refresh
                 </button>
             </div>
+            <div id="lastSyncInfo" class="last-sync-info" style="margin-bottom:1.5rem; font-size:1.2rem; color:#888;">Never synced</div>
 
             <div class="stats-grid">
                 <div class="stat-card">
@@ -128,6 +125,7 @@
             <a href="#services">Services</a>
             <a href="#portfolio">Portfolio</a>
             <a href="#contact">Contact</a>
+            <button id="themeToggle" class="theme-toggle-nav" title="Toggle Dark Mode" aria-label="Toggle Dark Mode">🌙</button>
         </nav>
     </header>
 
@@ -356,11 +354,8 @@
         </p>
     </footer>
 
-    <!-- #14: Dark Mode Toggle -->
-    <button id="themeToggle" class="theme-toggle" title="Toggle Dark Mode" aria-label="Toggle Dark Mode">🌙</button>
-
-    <!-- #15: Cookie Consent Banner -->
-    <div id="cookieBanner" class="cookie-banner" style="display:none;" role="dialog" aria-label="Cookie consent">
+    <!-- #15: Cookie Consent Banner – uses class to avoid inline-style flash -->
+    <div id="cookieBanner" class="cookie-banner hidden-init" role="dialog" aria-label="Cookie consent">
         <p>
             🍪 This site uses <strong>localStorage</strong> to remember visitor data and your preferences.
             No data is shared with third parties.

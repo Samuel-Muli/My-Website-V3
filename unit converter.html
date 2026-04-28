@@ -418,12 +418,15 @@
       unitFromSelect.addEventListener('change', performConversion);
       unitToSelect.addEventListener('change', performConversion);
 
+      // Single merged keydown listener – all shortcuts handled here
       document.addEventListener('keydown', (e) => {
-        if (document.activeElement.tagName === 'INPUT') return;
-        if (e.key === "Enter") { e.preventDefault(); performConversion(); }
+        const inInput = document.activeElement &&
+          (document.activeElement.tagName === 'INPUT' || document.activeElement.tagName === 'SELECT');
+        if (e.key === "Enter" && !inInput) { e.preventDefault(); performConversion(); }
         if (e.ctrlKey && e.shiftKey && e.key.toLowerCase() === "c") { e.preventDefault(); clearHistory(); }
         if (e.ctrlKey && e.shiftKey && e.key.toLowerCase() === "s") { e.preventDefault(); swapUnits(); }
-        // '?' is handled by the outer keydown listener above
+        // '?' only fires when NOT typing in an input
+        if (e.key === "?" && !inInput) { e.preventDefault(); toggleShortcutsPanel(); }
       });
 
       setCategory('length');
@@ -535,11 +538,7 @@
       if (panel) panel.classList.toggle('hidden');
     }
 
-    document.addEventListener('keydown', (e) => {
-      // Ignore if typing in input
-      if (e.target.tagName === 'INPUT') return;
-      if (e.key === '?') { e.preventDefault(); toggleShortcutsPanel(); }
-    });
+    // (keydown listener merged into initConverter above — no duplicate needed)
 
     // Start converter when DOM is ready
     window.addEventListener('DOMContentLoaded', initConverter);
@@ -599,7 +598,7 @@
   <button id="themeToggle" class="theme-toggle" title="Toggle Dark Mode" aria-label="Toggle Dark Mode">🌙</button>
 
   <!-- #15: Cookie Consent Banner -->
-  <div id="cookieBanner" class="cookie-banner" style="display:none;" role="dialog" aria-label="Cookie consent">
+  <div id="cookieBanner" class="cookie-banner hidden-init" role="dialog" aria-label="Cookie consent">
     <p>🍪 This site uses <strong>localStorage</strong> for conversion history and preferences. No data is shared.</p>
     <div class="cookie-buttons">
       <button id="cookieAccept" class="cookie-accept">Accept</button>
