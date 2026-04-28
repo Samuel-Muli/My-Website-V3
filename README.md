@@ -155,8 +155,8 @@ No build tools, bundlers, or frameworks — everything runs as plain static file
 
 **1. Clone or download the project**
 ```bash
-git clone https://github.com/Samuel-Muli/My_Website.git
-cd My_Website
+git clone https://github.com/Samuel-Muli/My-Website-V3.git
+cd My-Website-V3
 ```
 
 **2. Serve locally**
@@ -211,7 +211,7 @@ Timestamp · Date · Time · Name · Email · Purpose · IP · Location · Devic
 ### GitHub Pages
 1. Push to a GitHub repository
 2. Go to **Settings → Pages → Source → Deploy from branch → main / (root)**
-3. Your site is live at `https://samuel-muli.github.io/My_Website/`
+3. Your site is live at `https://samuel-muli.github.io/My-Website-V3/`
 
 ### cPanel / Shared Hosting
 1. Zip all files
@@ -250,8 +250,8 @@ Follow the prompts — root directory, no framework preset.
 | Project | Description | Link |
 |---|---|---|
 | WhatsApp Bot | JavaScript bot using the Baileys library for WhatsApp automation | [GitHub](https://github.com/Samuel-Muli/Nation-Protector) |
-| Portfolio Website | This site — responsive HTML/CSS/JS portfolio | [GitHub](https://github.com/Samuel-Muli/My_Website) |
-| Python Script | Automates downloading and organising files from the internet | [GitHub](https://github.com/Samuel-Muli/Task-Manager) |
+| Portfolio Website | This site — responsive HTML/CSS/JS portfolio | [GitHub](https://github.com/Samuel-Muli/My-Website-V3) |
+| Python Script |A simple python script that acts like a task manager | [GitHub](https://github.com/Samuel-Muli/Task-Manager) |
 | Lekisa Trading Co. | Company website built with React.js | [Live](https://lekisatradinglimited.onrender.com/) |
 | Age Calculator | Calculates exact age to the millisecond with zodiac and birthday facts | [Live](Your_Age.html) |
 | Unit Converter | Converts between units across 6 categories with history and shortcuts | [Live](unit_converter.html) |
